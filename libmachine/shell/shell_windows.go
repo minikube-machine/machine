@@ -54,7 +54,7 @@ func Detect() (string, error) {
 
 	// if you spawn a Powershell instance from CMD, sometimes the SHELL environment variable still points to CMD in the Powershell instance
 	// so if SHELL is pointing to CMD, let's do extra work to get the correct shell
-	if shell == "" || filepath.Base(shell) == "cmd" {
+	if shell == "" || filepath.Base(shell) == "cmd.exe" {
 		shell, shellppid, err := getNameAndItsPpid(os.Getppid())
 		if err != nil {
 			return "cmd", err // defaulting to cmd
