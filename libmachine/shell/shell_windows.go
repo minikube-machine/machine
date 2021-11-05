@@ -59,19 +59,17 @@ func Detect() (string, error) {
 		if err != nil {
 			return "cmd", err // defaulting to cmd
 		}
-		if strings.Contains(strings.ToLower(shell), "powershell") {
-			return "powershell", nil
-		} else if strings.Contains(strings.ToLower(shell), "cmd") {
-			return "cmd", nil
+		shellMapping := mapShell(shell)
+		if shellMapping != "" {
+			return shellMapping, nil
 		} else {
 			shell, _, err := getNameAndItsPpid(shellppid)
 			if err != nil {
 				return "cmd", err // defaulting to cmd
 			}
-			if strings.Contains(strings.ToLower(shell), "powershell") {
-				return "powershell", nil
-			} else if strings.Contains(strings.ToLower(shell), "cmd") {
-				return "cmd", nil
+			shellMapping = mapShell(shell)
+			if shellMapping != "" {
+				return shellMapping, nil
 			} else {
 				fmt.Printf("You can further specify your shell with either 'cmd' or 'powershell' with the --shell flag.\n\n")
 				return "cmd", nil // this could be either powershell or cmd, defaulting to cmd
@@ -88,4 +86,18 @@ func Detect() (string, error) {
 	}
 
 	return filepath.Base(shell), nil
+}
+
+func mapShell(shell string) string {
+	mappings := map[string]string{
+		"cmd": "cmd",
+		"powershell": "powershell",
+		"pwsh": "powershell",
+	}
+	for k, v := range mappings {
+		if strings.Contains(strings.ToLower(shell), k) {
+			return v
+		}
+	}
+	return ""
 }
