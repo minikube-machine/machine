@@ -33,6 +33,7 @@ const (
 	defaultDiskSize            = 20000
 	defaultDNSProxy            = true
 	defaultDNSResolver         = false
+	defaultHostReachable       = true
 )
 
 var (
@@ -54,6 +55,7 @@ type Driver struct {
 	ipWaiter            IPWaiter
 	randomInter         RandomInter
 	sleeper             Sleeper
+	version             int
 	CPU                 int
 	Memory              int
 	DiskSize            int
@@ -61,6 +63,7 @@ type Driver struct {
 	Boot2DockerURL      string
 	Boot2DockerImportVM string
 	HostDNSResolver     bool
+	HostReachable       bool
 	HostOnlyCIDR        string
 	HostOnlyNicType     string
 	HostOnlyPromiscMode string
@@ -95,6 +98,7 @@ func NewDriver(hostName, storePath string) *Driver {
 		HostOnlyNoDHCP:      defaultHostOnlyNoDHCP,
 		DNSProxy:            defaultDNSProxy,
 		HostDNSResolver:     defaultDNSResolver,
+		HostReachable:       defaultHostReachable,
 		BaseDriver: &drivers.BaseDriver{
 			MachineName: hostName,
 			StorePath:   storePath,
@@ -140,6 +144,11 @@ func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 			Name:   "virtualbox-host-dns-resolver",
 			Usage:  "Use the host DNS resolver",
 			EnvVar: "VIRTUALBOX_HOST_DNS_RESOLVER",
+		},
+		mcnflag.BoolFlag{
+			Name:   "virtualbox-host-reachable",
+			Usage:  "Enable host accessibility",
+			EnvVar: "VIRTUALBOX_HOST_REACHABLE",
 		},
 		mcnflag.StringFlag{
 			Name:   "virtualbox-nat-nictype",
@@ -236,6 +245,7 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 	d.SSHUser = "docker"
 	d.Boot2DockerImportVM = flags.String("virtualbox-import-boot2docker-vm")
 	d.HostDNSResolver = flags.Bool("virtualbox-host-dns-resolver")
+	d.HostReachable = flags.Bool("virtualbox-host-reachable")
 	d.NatNicType = flags.String("virtualbox-nat-nictype")
 	d.HostOnlyCIDR = flags.String("virtualbox-hostonly-cidr")
 	d.HostOnlyNicType = flags.String("virtualbox-hostonly-nictype")
@@ -259,9 +269,11 @@ func (d *Driver) PreCreateCheck() error {
 	}
 
 	// Check that VBoxManage is of a supported version
-	if err = checkVBoxManageVersion(strings.TrimSpace(version)); err != nil {
+	if err = checkVBoxManageVersion(version); err != nil {
 		return err
 	}
+
+	d.version, _, _ = parseVersion(strings.TrimSpace(version))
 
 	if !d.NoVTXCheck {
 		if isHyperVInstalled() {
@@ -372,6 +384,11 @@ func (d *Driver) CreateVM() error {
 		hostDNSResolver = "on"
 	}
 
+	hostReachable := "off"
+	if d.HostReachable {
+		hostReachable = "on"
+	}
+
 	dnsProxy := "off"
 	if d.DNSProxy {
 		dnsProxy = "on"
@@ -401,6 +418,10 @@ func (d *Driver) CreateVM() error {
 		"--vtxvpid", "on",
 		"--accelerate3d", "off",
 		"--boot1", "dvd"}
+
+	if d.version > 6 {
+		modifyFlags = append(modifyFlags, "--natlocalhostreachable1", hostReachable)
+	}
 
 	if runtime.GOOS == "windows" && runtime.GOARCH == "386" {
 		modifyFlags = append(modifyFlags, "--longmode", "on")
