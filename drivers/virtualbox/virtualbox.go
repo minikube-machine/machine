@@ -21,19 +21,19 @@ import (
 )
 
 const (
-	defaultCPU                 = 1
-	defaultMemory              = 1024
-	defaultBoot2DockerURL      = ""
-	defaultBoot2DockerImportVM = ""
-	defaultHostOnlyCIDR        = "192.168.99.1/24"
-	defaultHostOnlyNictype     = "82540EM"
-	defaultHostOnlyPromiscMode = "deny"
-	defaultUIType              = "headless"
-	defaultHostOnlyNoDHCP      = false
-	defaultDiskSize            = 20000
-	defaultDNSProxy            = true
-	defaultDNSResolver         = false
-	defaultHostReachable       = true
+	defaultCPU                   = 1
+	defaultMemory                = 1024
+	defaultBoot2DockerURL        = ""
+	defaultBoot2DockerImportVM   = ""
+	defaultHostOnlyCIDR          = "192.168.99.1/24"
+	defaultHostOnlyNictype       = "82540EM"
+	defaultHostOnlyPromiscMode   = "deny"
+	defaultUIType                = "headless"
+	defaultHostOnlyNoDHCP        = false
+	defaultDiskSize              = 20000
+	defaultDNSProxy              = true
+	defaultDNSResolver           = false
+	defaultHostLoopbackReachable = true
 )
 
 var (
@@ -48,57 +48,57 @@ type Driver struct {
 	*drivers.BaseDriver
 	VBoxManager
 	HostInterfaces
-	b2dUpdater          B2DUpdater
-	sshKeyGenerator     SSHKeyGenerator
-	diskCreator         DiskCreator
-	logsReader          LogsReader
-	ipWaiter            IPWaiter
-	randomInter         RandomInter
-	sleeper             Sleeper
-	version             int
-	CPU                 int
-	Memory              int
-	DiskSize            int
-	NatNicType          string
-	Boot2DockerURL      string
-	Boot2DockerImportVM string
-	HostDNSResolver     bool
-	HostReachable       bool
-	HostOnlyCIDR        string
-	HostOnlyNicType     string
-	HostOnlyPromiscMode string
-	UIType              string
-	HostOnlyNoDHCP      bool
-	NoShare             bool
-	DNSProxy            bool
-	NoVTXCheck          bool
-	ShareFolder         string
+	b2dUpdater            B2DUpdater
+	sshKeyGenerator       SSHKeyGenerator
+	diskCreator           DiskCreator
+	logsReader            LogsReader
+	ipWaiter              IPWaiter
+	randomInter           RandomInter
+	sleeper               Sleeper
+	version               int
+	CPU                   int
+	Memory                int
+	DiskSize              int
+	NatNicType            string
+	Boot2DockerURL        string
+	Boot2DockerImportVM   string
+	HostDNSResolver       bool
+	HostLoopbackReachable bool
+	HostOnlyCIDR          string
+	HostOnlyNicType       string
+	HostOnlyPromiscMode   string
+	UIType                string
+	HostOnlyNoDHCP        bool
+	NoShare               bool
+	DNSProxy              bool
+	NoVTXCheck            bool
+	ShareFolder           string
 }
 
 // NewDriver creates a new VirtualBox driver with default settings.
 func NewDriver(hostName, storePath string) *Driver {
 	return &Driver{
-		VBoxManager:         NewVBoxManager(),
-		b2dUpdater:          NewB2DUpdater(),
-		sshKeyGenerator:     NewSSHKeyGenerator(),
-		diskCreator:         NewDiskCreator(),
-		logsReader:          NewLogsReader(),
-		ipWaiter:            NewIPWaiter(),
-		randomInter:         NewRandomInter(),
-		sleeper:             NewSleeper(),
-		HostInterfaces:      NewHostInterfaces(),
-		Memory:              defaultMemory,
-		CPU:                 defaultCPU,
-		DiskSize:            defaultDiskSize,
-		NatNicType:          defaultHostOnlyNictype,
-		HostOnlyCIDR:        defaultHostOnlyCIDR,
-		HostOnlyNicType:     defaultHostOnlyNictype,
-		HostOnlyPromiscMode: defaultHostOnlyPromiscMode,
-		UIType:              defaultUIType,
-		HostOnlyNoDHCP:      defaultHostOnlyNoDHCP,
-		DNSProxy:            defaultDNSProxy,
-		HostDNSResolver:     defaultDNSResolver,
-		HostReachable:       defaultHostReachable,
+		VBoxManager:           NewVBoxManager(),
+		b2dUpdater:            NewB2DUpdater(),
+		sshKeyGenerator:       NewSSHKeyGenerator(),
+		diskCreator:           NewDiskCreator(),
+		logsReader:            NewLogsReader(),
+		ipWaiter:              NewIPWaiter(),
+		randomInter:           NewRandomInter(),
+		sleeper:               NewSleeper(),
+		HostInterfaces:        NewHostInterfaces(),
+		Memory:                defaultMemory,
+		CPU:                   defaultCPU,
+		DiskSize:              defaultDiskSize,
+		NatNicType:            defaultHostOnlyNictype,
+		HostOnlyCIDR:          defaultHostOnlyCIDR,
+		HostOnlyNicType:       defaultHostOnlyNictype,
+		HostOnlyPromiscMode:   defaultHostOnlyPromiscMode,
+		UIType:                defaultUIType,
+		HostOnlyNoDHCP:        defaultHostOnlyNoDHCP,
+		DNSProxy:              defaultDNSProxy,
+		HostDNSResolver:       defaultDNSResolver,
+		HostLoopbackReachable: defaultHostLoopbackReachable,
 		BaseDriver: &drivers.BaseDriver{
 			MachineName: hostName,
 			StorePath:   storePath,
@@ -146,9 +146,9 @@ func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 			EnvVar: "VIRTUALBOX_HOST_DNS_RESOLVER",
 		},
 		mcnflag.BoolFlag{
-			Name:   "virtualbox-host-reachable",
-			Usage:  "Enable host accessibility",
-			EnvVar: "VIRTUALBOX_HOST_REACHABLE",
+			Name:   "virtualbox-host-loopback-reachable",
+			Usage:  "Enable host loopback interface accessibility",
+			EnvVar: "VIRTUALBOX_HOST_LOOPBACK_REACHABLE",
 		},
 		mcnflag.StringFlag{
 			Name:   "virtualbox-nat-nictype",
@@ -245,7 +245,7 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 	d.SSHUser = "docker"
 	d.Boot2DockerImportVM = flags.String("virtualbox-import-boot2docker-vm")
 	d.HostDNSResolver = flags.Bool("virtualbox-host-dns-resolver")
-	d.HostReachable = flags.Bool("virtualbox-host-reachable")
+	d.HostLoopbackReachable = flags.Bool("virtualbox-host-loopback-reachable")
 	d.NatNicType = flags.String("virtualbox-nat-nictype")
 	d.HostOnlyCIDR = flags.String("virtualbox-hostonly-cidr")
 	d.HostOnlyNicType = flags.String("virtualbox-hostonly-nictype")
@@ -269,7 +269,7 @@ func (d *Driver) PreCreateCheck() error {
 	}
 
 	// Check that VBoxManage is of a supported version
-	if err = checkVBoxManageVersion(version); err != nil {
+	if err = checkVBoxManageVersion(strings.TrimSpace(version)); err != nil {
 		return err
 	}
 
@@ -384,9 +384,9 @@ func (d *Driver) CreateVM() error {
 		hostDNSResolver = "on"
 	}
 
-	hostReachable := "off"
-	if d.HostReachable {
-		hostReachable = "on"
+	hostLoopbackReachable := "off"
+	if d.HostLoopbackReachable {
+		hostLoopbackReachable = "on"
 	}
 
 	dnsProxy := "off"
@@ -420,7 +420,7 @@ func (d *Driver) CreateVM() error {
 		"--boot1", "dvd"}
 
 	if d.version > 6 {
-		modifyFlags = append(modifyFlags, "--natlocalhostreachable1", hostReachable)
+		modifyFlags = append(modifyFlags, "--natlocalhostreachable1", hostLoopbackReachable)
 	}
 
 	if runtime.GOOS == "windows" && runtime.GOARCH == "386" {
