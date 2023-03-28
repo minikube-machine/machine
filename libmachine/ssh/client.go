@@ -11,9 +11,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/docker/docker/pkg/term"
 	"github.com/docker/machine/libmachine/log"
 	"github.com/docker/machine/libmachine/mcnutils"
+	"github.com/moby/term"
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/terminal"
 )
