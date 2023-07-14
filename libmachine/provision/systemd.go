@@ -33,6 +33,18 @@ func NewSystemdProvisioner(osReleaseID string, d drivers.Driver) SystemdProvisio
 	}
 }
 
+func NewSystemdProvisionerNOPKG(osReleaseID string, d drivers.Driver) SystemdProvisioner {
+	return SystemdProvisioner{
+		GenericProvisioner{
+			SSHCommander:      GenericSSHCommander{Driver: d},
+			DockerOptionsDir:  "/etc/docker",
+			DaemonOptionsFile: "/etc/systemd/system/docker.service.d/10-machine.conf",
+			OsReleaseID:       osReleaseID,
+			Driver:            d,
+		},
+	}
+}
+
 func (p *SystemdProvisioner) GenerateDockerOptions(dockerPort int) (*DockerOptions, error) {
 	var (
 		engineCfg bytes.Buffer

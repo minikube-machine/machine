@@ -1,21 +1,34 @@
 package provision
 
 import (
+	"bytes"
 	"fmt"
+	"path"
+	"strings"
+	"text/template"
+	"time"
 
 	"github.com/docker/machine/libmachine/auth"
+	"github.com/docker/machine/libmachine/cert"
 	"github.com/docker/machine/libmachine/drivers"
 	"github.com/docker/machine/libmachine/engine"
 	"github.com/docker/machine/libmachine/log"
+	"github.com/docker/machine/libmachine/mcnutils"
 	"github.com/docker/machine/libmachine/provision/pkgaction"
 	"github.com/docker/machine/libmachine/provision/serviceaction"
 	"github.com/docker/machine/libmachine/swarm"
+	"github.com/docker/machine/libmachine/utils"
+	"github.com/pkg/errors"
+	"k8s.io/klog/v2"
 )
 
 var (
 	provisioners          = make(map[string]*RegisteredProvisioner)
 	detector     Detector = &StandardDetector{}
 )
+
+// for escaping systemd template specifiers (e.g. '%i'), which are not supported by minikube
+var systemdSpecifierEscaper = strings.NewReplacer("%", "%%")
 
 const (
 	LastReleaseBeforeCEVersioning = "1.13.1"
@@ -129,4 +142,127 @@ func (detector StandardDetector) DetectProvisioner(d drivers.Driver) (Provisione
 	}
 
 	return nil, ErrDetectionFailed
+}
+
+func rootFileSystemType(p SSHCommander) (string, error) {
+	fs, err := p.SSHCommand("df --output=fstype / | tail -n 1")
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(fs), nil
+}
+
+// updateUnit efficiently updates a systemd unit file
+func updateUnit(p SSHCommander, name string, content string, dst string) error {
+	klog.Infof("Updating %s unit: %s ...", name, dst)
+
+	if _, err := p.SSHCommand(fmt.Sprintf("sudo mkdir -p %s && printf %%s \"%s\" | sudo tee %s.new", path.Dir(dst), content, dst)); err != nil {
+		return err
+	}
+	if _, err := p.SSHCommand(fmt.Sprintf("sudo diff -u %s %s.new || { sudo mv %s.new %s; sudo systemctl -f daemon-reload && sudo systemctl -f enable %s && sudo systemctl -f restart %s; }", dst, dst, dst, dst, name, name)); err != nil {
+		return err
+	}
+	return nil
+}
+
+// escapeSystemdDirectives escapes special characters in the input variables used to create the
+// systemd unit file, which would otherwise be interpreted as systemd directives. An example
+// are template specifiers (e.g. '%i') which are predefined variables that get evaluated dynamically
+// (see systemd man pages for more info). This is not supported by minikube, thus needs to be escaped.
+func escapeSystemdDirectives(engineConfigContext *EngineConfigContext) {
+	// escape '%' in Environment option so that it does not evaluate into a template specifier
+	engineConfigContext.EngineOptions.Env = utils.ReplaceChars(engineConfigContext.EngineOptions.Env, systemdSpecifierEscaper)
+	// input might contain whitespaces, wrap it in quotes
+	engineConfigContext.EngineOptions.Env = utils.ConcatStrings(engineConfigContext.EngineOptions.Env, "\"", "\"")
+}
+
+func configureAuth(p Provisioner) error {
+	klog.Infof("configureAuth start")
+	start := time.Now()
+	defer func() {
+		klog.Infof("duration metric: configureAuth took %s", time.Since(start))
+	}()
+
+	driver := p.GetDriver()
+	machineName := driver.GetMachineName()
+	authOptions := p.GetAuthOptions()
+	org := mcnutils.GetUsername() + "." + machineName
+	bits := 2048
+
+	ip, err := driver.GetIP()
+	if err != nil {
+		return errors.Wrap(err, "error getting ip during provisioning")
+	}
+
+	hostIP, err := driver.GetSSHHostname()
+	if err != nil {
+		return errors.Wrap(err, "error getting ssh hostname during provisioning")
+	}
+
+	if err := copyHostCerts(authOptions); err != nil {
+		return err
+	}
+
+	hosts := authOptions.ServerCertSANs
+	// The Host IP is always added to the certificate's SANs list
+	hosts = append(hosts, ip, hostIP, "localhost", "127.0.0.1", "minikube", machineName)
+	klog.Infof("generating server cert: %s ca-key=%s private-key=%s org=%s san=%s",
+		authOptions.ServerCertPath,
+		authOptions.CaCertPath,
+		authOptions.CaPrivateKeyPath,
+		org,
+		hosts,
+	)
+
+	err = cert.GenerateCert(&cert.Options{
+		Hosts:     hosts,
+		CertFile:  authOptions.ServerCertPath,
+		KeyFile:   authOptions.ServerKeyPath,
+		CAFile:    authOptions.CaCertPath,
+		CAKeyFile: authOptions.CaPrivateKeyPath,
+		Org:       org,
+		Bits:      bits,
+	})
+
+	if err != nil {
+		return fmt.Errorf("error generating server cert: %v", err)
+	}
+
+	return copyRemoteCerts(authOptions, driver, p)
+}
+
+func setContainerRuntimeOptions(cruntime string, p Provisioner) error {
+	switch cruntime {
+	case "crio", "cri-o":
+		return setCrioOptions(p)
+	case "containerd":
+		return nil
+	default:
+		_, err := p.GenerateDockerOptions(engine.DefaultPort)
+		return err
+	}
+}
+
+func setCrioOptions(p SSHCommander) error {
+	// pass through --insecure-registry
+	var (
+		crioOptsTmpl = `
+CRIO_MINIKUBE_OPTIONS='{{ range .EngineOptions.InsecureRegistry }}--insecure-registry {{.}} {{ end }}'
+`
+		crioOptsPath = "/etc/sysconfig/crio.minikube"
+	)
+	t, err := template.New("crioOpts").Parse(crioOptsTmpl)
+	if err != nil {
+		return err
+	}
+	var crioOptsBuf bytes.Buffer
+	if err := t.Execute(&crioOptsBuf, p); err != nil {
+		return err
+	}
+
+	if _, err = p.SSHCommand(fmt.Sprintf("sudo mkdir -p %s && printf %%s \"%s\" | sudo tee %s && sudo systemctl restart crio", path.Dir(crioOptsPath), crioOptsBuf.String(), crioOptsPath)); err != nil {
+		return err
+	}
+
+	return nil
 }

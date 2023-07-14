@@ -5,6 +5,7 @@ const (
 )
 
 type Options struct {
+	EngineName       string
 	ArbitraryFlags   []string
 	DNS              []string `json:"Dns"`
 	GraphDir         string
