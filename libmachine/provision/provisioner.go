@@ -3,15 +3,11 @@ package provision
 import (
 	"bytes"
 	"fmt"
-	"os"
-	"os/exec"
 	"path"
-	"path/filepath"
 	"strings"
 	"text/template"
 	"time"
 
-	"github.com/docker/machine/libmachine/assets"
 	"github.com/docker/machine/libmachine/auth"
 	"github.com/docker/machine/libmachine/cert"
 	"github.com/docker/machine/libmachine/drivers"
@@ -24,8 +20,6 @@ import (
 	"github.com/docker/machine/libmachine/utils"
 	"github.com/pkg/errors"
 	"k8s.io/klog/v2"
-	"k8s.io/minikube/pkg/minikube/command"
-	"k8s.io/minikube/pkg/minikube/config"
 )
 
 var (
@@ -234,16 +228,11 @@ func configureAuth(p Provisioner) error {
 		return fmt.Errorf("error generating server cert: %v", err)
 	}
 
-	return copyRemoteCerts(authOptions, driver)
+	return copyRemoteCerts(authOptions, driver, p)
 }
 
-func setContainerRuntimeOptions(name string, p Provisioner) error {
-	c, err := config.Load(name)
-	if err != nil {
-		return errors.Wrap(err, "getting cluster config")
-	}
-
-	switch c.KubernetesConfig.ContainerRuntime {
+func setContainerRuntimeOptions(cruntime string, p Provisioner) error {
+	switch cruntime {
 	case "crio", "cri-o":
 		return setCrioOptions(p)
 	case "containerd":
@@ -252,80 +241,6 @@ func setContainerRuntimeOptions(name string, p Provisioner) error {
 		_, err := p.GenerateDockerOptions(engine.DefaultPort)
 		return err
 	}
-}
-
-func copyRemoteCerts(authOptions auth.Options, driver drivers.Driver) error {
-	klog.Infof("copyRemoteCerts")
-
-	remoteCerts := map[string]string{
-		authOptions.CaCertPath:     authOptions.CaCertRemotePath,
-		authOptions.ServerCertPath: authOptions.ServerCertRemotePath,
-		authOptions.ServerKeyPath:  authOptions.ServerKeyRemotePath,
-	}
-
-	sshRunner := command.NewSSHRunner(driver)
-
-	dirs := []string{}
-	for _, dst := range remoteCerts {
-		dirs = append(dirs, path.Dir(dst))
-	}
-
-	args := append([]string{"mkdir", "-p"}, dirs...)
-	if _, err := sshRunner.RunCmd(exec.Command("sudo", args...)); err != nil {
-		return err
-	}
-
-	for src, dst := range remoteCerts {
-		f, err := assets.NewFileAsset(src, path.Dir(dst), filepath.Base(dst), "0640")
-		if err != nil {
-			return errors.Wrapf(err, "error copying %s to %s", src, dst)
-		}
-		defer func() {
-			if err := f.Close(); err != nil {
-				klog.Warningf("error closing the file %s: %v", f.GetSourcePath(), err)
-			}
-		}()
-
-		if err := sshRunner.Copy(f); err != nil {
-			return errors.Wrapf(err, "transferring file to machine %v", f)
-		}
-	}
-
-	return nil
-}
-
-func copyHostCerts(authOptions auth.Options) error {
-	klog.Infof("copyHostCerts")
-
-	err := os.MkdirAll(authOptions.StorePath, 0700)
-	if err != nil {
-		klog.Errorf("mkdir failed: %v", err)
-	}
-
-	hostCerts := map[string]string{
-		authOptions.CaCertPath:     path.Join(authOptions.StorePath, "ca.pem"),
-		authOptions.ClientCertPath: path.Join(authOptions.StorePath, "cert.pem"),
-		authOptions.ClientKeyPath:  path.Join(authOptions.StorePath, "key.pem"),
-	}
-
-	execRunner := command.NewExecRunner(false)
-	for src, dst := range hostCerts {
-		f, err := assets.NewFileAsset(src, path.Dir(dst), filepath.Base(dst), "0777")
-		if err != nil {
-			return errors.Wrapf(err, "open cert file: %s", src)
-		}
-		defer func() {
-			if err := f.Close(); err != nil {
-				klog.Warningf("error closing the file %s: %v", f.GetSourcePath(), err)
-			}
-		}()
-
-		if err := execRunner.Copy(f); err != nil {
-			return errors.Wrapf(err, "transferring file: %+v", f)
-		}
-	}
-
-	return nil
 }
 
 func setCrioOptions(p SSHCommander) error {

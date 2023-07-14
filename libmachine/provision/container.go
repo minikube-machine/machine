@@ -20,17 +20,13 @@ import (
 	"bytes"
 	"fmt"
 	"text/template"
-	"time"
 
 	"github.com/docker/machine/libmachine/auth"
 	"github.com/docker/machine/libmachine/drivers"
 	"github.com/docker/machine/libmachine/engine"
 	"github.com/docker/machine/libmachine/provision/pkgaction"
 	"github.com/docker/machine/libmachine/swarm"
-	"github.com/spf13/viper"
 	"k8s.io/klog/v2"
-	"k8s.io/minikube/pkg/minikube/config"
-	"k8s.io/minikube/pkg/util/retry"
 )
 
 func init() {
@@ -51,7 +47,6 @@ func NewContainerProvisioner(d drivers.Driver) Provisioner {
 	return &ContainerProvisioner{
 		BuildrootProvisioner{
 			NewSystemdProvisionerNOPKG("ubuntu", d),
-			viper.GetString(config.ProfileName),
 		},
 	}
 }
@@ -182,23 +177,14 @@ func (p *ContainerProvisioner) Provision(swarmOptions swarm.Options, authOptions
 	klog.Infof("set auth options %+v", p.AuthOptions)
 
 	klog.Infof("setting up certificates")
-	configAuth := func() error {
-		if err := configureAuth(p); err != nil {
-			klog.Warningf("configureAuth failed: %v", err)
-			return &retry.RetriableError{Err: err}
-		}
-		return nil
-	}
-
-	err := retry.Expo(configAuth, 100*time.Microsecond, 2*time.Minute)
-
+	err := configureAuth(p)
 	if err != nil {
 		klog.Infof("Error configuring auth during provisioning %v", err)
 		return err
 	}
 
 	klog.Infof("setting minikube options for container-runtime")
-	if err := setContainerRuntimeOptions(p.clusterName, p); err != nil {
+	if err := setContainerRuntimeOptions(engineOptions.EngineName, p); err != nil {
 		klog.Infof("Error setting container-runtime options during provisioning %v", err)
 		return err
 	}

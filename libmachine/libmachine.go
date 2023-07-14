@@ -1,6 +1,7 @@
 package libmachine
 
 import (
+	"encoding/json"
 	"fmt"
 	"path/filepath"
 
@@ -12,7 +13,7 @@ import (
 	"github.com/docker/machine/libmachine/check"
 	"github.com/docker/machine/libmachine/drivers"
 	"github.com/docker/machine/libmachine/drivers/plugin/localbinary"
-	"github.com/docker/machine/libmachine/drivers/rpc"
+	rpcdriver "github.com/docker/machine/libmachine/drivers/rpc"
 	"github.com/docker/machine/libmachine/engine"
 	"github.com/docker/machine/libmachine/host"
 	"github.com/docker/machine/libmachine/log"
@@ -24,6 +25,7 @@ import (
 	"github.com/docker/machine/libmachine/state"
 	"github.com/docker/machine/libmachine/swarm"
 	"github.com/docker/machine/libmachine/version"
+	"github.com/pkg/errors"
 )
 
 type API interface {
@@ -54,9 +56,20 @@ func NewClient(storePath, certsDir string) *Client {
 }
 
 func (api *Client) NewHost(driverName string, rawDriver []byte) (*host.Host, error) {
+	// we can hide the container runtime parameter here
+	// until we can refactor the machine API or all the drivers structs
+	badHack := struct {
+		ContainerRuntime string
+	}{}
+
 	driver, err := api.clientDriverFactory.NewRPCClientDriver(driverName, rawDriver)
 	if err != nil {
 		return nil, err
+	}
+
+	err = json.Unmarshal(rawDriver, &badHack)
+	if err != nil {
+		return nil, errors.Wrap(err, "while unmarshaling 1st time for container Runtime")
 	}
 
 	return &host.Host{
@@ -78,6 +91,7 @@ func (api *Client) NewHost(driverName string, rawDriver []byte) (*host.Host, err
 				InstallURL:    drivers.DefaultEngineInstallURL,
 				StorageDriver: "overlay2",
 				TLSVerify:     true,
+				EngineName:    badHack.ContainerRuntime,
 			},
 			SwarmOptions: &swarm.Options{
 				Host:     "tcp://0.0.0.0:3376",
