@@ -24,3 +24,5 @@ require (
 )
 
 replace github.com/samalba/dockerclient => github.com/sayboras/dockerclient v1.0.0
+
+replace github.com/intel-go/cpuid => github.com/aregm/cpuid v0.0.0-20181003105527-1a4a6f06a1c6
