@@ -1,8 +1,9 @@
+//go:build 386 || amd64
 // +build 386 amd64
 
 package virtualbox
 
-import "github.com/intel-go/cpuid"
+import "github.com/aregm/cpuid"
 
 // IsVTXDisabled checks if VT-x is disabled in the CPU.
 func (d *Driver) IsVTXDisabled() bool {

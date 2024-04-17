@@ -1,9 +1,10 @@
 module github.com/docker/machine
 
-go 1.17
+go 1.22
 
 require (
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
+	github.com/aregm/cpuid v0.0.0-20181003105527-1a4a6f06a1c6
 	github.com/bitly/go-simplejson v0.5.0 // indirect
 	github.com/bugsnag/bugsnag-go v0.0.0-20151120182711-02e952891c52
 	github.com/bugsnag/osext v0.0.0-20130617224835-0dd3f918b21b // indirect
@@ -12,7 +13,6 @@ require (
 	github.com/docker/go-units v0.0.0-20151230175859-0bbddae09c5a // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/hectane/go-acl v0.0.0-20190604041725-da78bae5fc95
-	github.com/intel-go/cpuid v0.0.0-20181003105527-1a4a6f06a1c6
 	github.com/juju/loggo v1.0.0 // indirect
 	github.com/moby/term v0.0.0-20200416134343-063f2cd0b49d
 	github.com/samalba/dockerclient v0.0.0-20151231000007-f661dd4754aa
@@ -29,7 +29,4 @@ require (
 	github.com/sirupsen/logrus v1.4.2 // indirect
 )
 
-replace (
-	github.com/intel-go/cpuid => github.com/aregm/cpuid v0.0.0-20181003105527-1a4a6f06a1c6
-	github.com/samalba/dockerclient => github.com/sayboras/dockerclient v1.0.0
-)
+replace github.com/samalba/dockerclient => github.com/sayboras/dockerclient v1.0.0
