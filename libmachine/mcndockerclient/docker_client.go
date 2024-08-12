@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/docker/machine/libmachine/cert"
-	"github.com/samalba/dockerclient"
+	"github.com/sayboras/dockerclient"
 )
 
 // DockerClient creates a docker client for a given host.

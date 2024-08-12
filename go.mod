@@ -15,7 +15,7 @@ require (
 	github.com/hectane/go-acl v0.0.0-20190604041725-da78bae5fc95
 	github.com/juju/loggo v1.0.0 // indirect
 	github.com/moby/term v0.0.0-20200416134343-063f2cd0b49d
-	github.com/samalba/dockerclient v0.0.0-20151231000007-f661dd4754aa
+	github.com/sayboras/dockerclient v1.0.0
 	github.com/stretchr/testify v1.2.2
 	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
 	golang.org/x/sys v0.0.0-20200302150141-5c8b2ff67527
@@ -31,4 +31,5 @@ require (
 
 replace (
 	github.com/samalba/dockerclient => github.com/sayboras/dockerclient v1.0.0
+	github.com/intel-go/cpuid => github.com/aregm/cpuid v0.0.0-20181003105527-1a4a6f06a1c6
 )
