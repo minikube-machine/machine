@@ -11,7 +11,7 @@ import (
 	"github.com/docker/machine/libmachine/log"
 	"github.com/docker/machine/libmachine/mcndockerclient"
 	"github.com/docker/machine/libmachine/swarm"
-	"github.com/samalba/dockerclient"
+	"github.com/sayboras/dockerclient"
 )
 
 func configureSwarm(p Provisioner, swarmOptions swarm.Options, authOptions auth.Options) error {
