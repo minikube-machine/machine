@@ -28,8 +28,3 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/sirupsen/logrus v1.4.2 // indirect
 )
-
-replace (
-	github.com/samalba/dockerclient => github.com/sayboras/dockerclient v1.0.0
-	github.com/intel-go/cpuid => github.com/aregm/cpuid v0.0.0-20181003105527-1a4a6f06a1c6
-)
