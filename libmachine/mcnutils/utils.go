@@ -9,10 +9,29 @@ import (
 	"runtime"
 	"strconv"
 	"time"
+
+	"github.com/docker/machine/libmachine/log"
 )
 
 type MultiError struct {
 	Errs []error
+}
+
+var ConfigGuestOSUtil *GuestOSUtil
+
+type GuestOSUtil struct {
+	os string
+}
+
+func SetGuestOSUtil(guestOS string) {
+	log.Debugf("==== we are being called")
+	ConfigGuestOSUtil = &GuestOSUtil{
+		os: guestOS,
+	}
+}
+
+func (g *GuestOSUtil) GetGuestOS() string {
+	return g.os
 }
 
 func (e MultiError) Error() string {

@@ -22,11 +22,13 @@ import (
 )
 
 const (
-	defaultURL            = "https://api.github.com/repos/boot2docker/boot2docker/releases"
-	defaultISOFilename    = "boot2docker.iso"
-	defaultVolumeIDOffset = int64(0x8028)
-	versionPrefix         = "-v"
-	defaultVolumeIDLength = 32
+	defaultURL                          = "https://api.github.com/repos/boot2docker/boot2docker/releases"
+	defaultISOFilename                  = "boot2docker.iso"
+	defaultWindowsISOFilename           = "SERVER_EVAL_x64FRE_en-us.iso"
+	defaultWindowsAnswerFileISOFilename = "auto-install.iso"
+	defaultVolumeIDOffset               = int64(0x8028)
+	versionPrefix                       = "-v"
+	defaultVolumeIDLength               = 32
 )
 
 var (
@@ -356,6 +358,10 @@ func NewB2dUtils(storePath string) *B2dUtils {
 	}
 }
 
+func (b *B2dUtils) GetImgCachePath() string {
+	return b.imgCachePath
+}
+
 // DownloadISO downloads boot2docker ISO image for the given tag and save it at dest.
 func (b *B2dUtils) DownloadISO(dir, file, isoURL string) error {
 	log.Infof("Downloading %s from %s...", b.path(), isoURL)
@@ -464,6 +470,28 @@ func (b *B2dUtils) CopyIsoToMachineDir(isoURL, machineName string) error {
 	}
 
 	return b.DownloadISO(machineDir, b.filename(), downloadURL)
+}
+
+func (b *B2dUtils) CopyWindowsIsoToMachineDir(machineName string) error {
+
+	machineDir := filepath.Join(b.storePath, "machines", machineName)
+
+	windowsMachineIsoPath := filepath.Join(machineDir, "SERVER_EVAL_x64FRE_en-us.iso")
+	answerFilePath := filepath.Join(machineDir, "auto-install.iso")
+
+	// cached location of the windows iso
+	windowsIsoPath := filepath.Join(b.imgCachePath, "SERVER_EVAL_x64FRE_en-us.iso")
+	// cached location of the answer file
+	answerFile := filepath.Join(b.imgCachePath, "auto-install.iso")
+
+	log.Infof("Copying %s to %s...", windowsIsoPath, windowsMachineIsoPath)
+	err := CopyFile(windowsIsoPath, windowsMachineIsoPath)
+	if err != nil {
+		return err
+	}
+	log.Infof("Copying %s to %s...", answerFile, answerFilePath)
+	return CopyFile(answerFile, answerFilePath)
+
 }
 
 // isLatest checks the latest release tag and
