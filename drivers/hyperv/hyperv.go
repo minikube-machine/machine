@@ -37,7 +37,7 @@ const (
 	defaultDisableDynamicMemory = false
 	defaultSwitchID             = "c08cb7b8-9b3c-408e-8e30-5e16a3aeb444"
 	defaultWindowsServerISOURL  = "https://go.microsoft.com/fwlink/p/?LinkID=2195280&clcid=0x409&culture=en-us&country=US"
-	defaultVMDvdDriveISOURL     = "https://github.com/vrapolinario/MinikubeWindowsContainers/raw/e6fbbed861c20099212f1e46e7a814b2b653c075/auto-install.iso"
+	defaultVMDvdDriveISOURL     = "https://github.com/vrapolinario/MinikubeWindowsContainers/raw/ed08391d61f4db9d3a670f5bfbb2cf8d4fe980f4/auto-install.iso"
 )
 
 // NewDriver creates a new Hyper-v driver with default settings.
@@ -382,6 +382,13 @@ func (d *Driver) chooseVirtualSwitch() (string, error) {
 func (d *Driver) waitForIP() (string, error) {
 	log.Infof("Waiting for host to start...")
 
+	if mcnutils.ConfigGuestOSUtil.GetGuestOS() == "windows" {
+		if err := TestWindowsInstallation(d); err != nil {
+			return "", err
+		}
+
+	}
+
 	for {
 		ip, _ := d.GetIP()
 		if ip != "" {
@@ -560,23 +567,55 @@ func (d *Driver) generateDiskImage() (string, error) {
 	return diskImage, nil
 }
 
-func Credential(d *Driver) error {
+func GetCredentials() string {
 	password := "Minikube@2024"
 	username := "Administrator"
 
-	// PowerShell script to create a PSCredential object and execute Invoke-Command
-	psScript := `
-		$SecurePassword = ConvertTo-SecureString -String "` + password + `" -AsPlainText -Force
-		$Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "` + username + `", $SecurePassword
-		Invoke-Command -VMName "` + d.MachineName + `" -Credential $Credential -ScriptBlock {Get-Culture}
-	`
+	// Construct the PowerShell script
+	psScript := fmt.Sprintf(`$SecurePassword = ConvertTo-SecureString -String "%s" -AsPlainText -Force; `+
+		`$Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "%s", $SecurePassword;`,
+		password, username)
 
-	if err := cmd("powershell", "-Command", psScript); err != nil {
-		return err
-	}
-
-	// log.Debugf the result of psScript
+	// Invoke-Command -VMName "` + d.MachineName + `" -Credential $Credential -ScriptBlock {Get-Culture}
 	log.Debugf("psScript: %s", psScript)
 
+	return psScript
+}
+
+func TestWindowsInstallation(d *Driver) error {
+	log.Debugf("=== TestWindowsInstallation === Checking if Windows is installed on %s", d.MachineName)
+	const retryInterval = 45 * time.Second
+	const timeout = 120 * time.Second
+	elapsedTime := 0 * time.Second
+	start := time.Now()
+
+	for {
+		// Check if the timeout has been reached
+		if elapsedTime > timeout {
+			return fmt.Errorf("timeout reached while checking if Windows is installed on %s", d.MachineName)
+		}
+
+		// PowerShell script to check if the OS is installed
+		credential := GetCredentials()
+
+		psScript := fmt.Sprintf(`%s Invoke-Command -VMName %s -Credential $Credential -ScriptBlock {Get-WmiObject -Query 'SELECT * FROM Win32_OperatingSystem'}`, credential, d.MachineName)
+		stdout, err := cmdOut(psScript)
+
+		// psScript := fmt.Sprintf(`%s Invoke-Command -VMName %s -Credential $Credential -ScriptBlock {Get-WmiObject -Query 'SELECT * FROM Win32_OperatingSystem'}`, credential, d.MachineName)
+		// fullScript := fmt.Sprintf(`powershell -NoProfile -NonInteractive -Command "& { %s }"`, psScript)
+		// stdout, err := cmdOut("powershell", "-NoProfile", "-NonInteractive", "-Command", fullScript)
+
+		if err == nil {
+			log.Debugf("Windows is successfully installed on %s", d.MachineName)
+			log.Debugf("stdout: %s", stdout)
+			// parse the value of stdout to show the progress of the installation
+			break
+		} else {
+			log.Warnf("An error occurred while checking if Windows is installed on %s: %v", d.MachineName, err)
+		}
+
+		time.Sleep(retryInterval)
+		elapsedTime = time.Since(start)
+	}
 	return nil
 }
