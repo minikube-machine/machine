@@ -44,6 +44,7 @@ type Host struct {
 	HostOptions   *Options
 	Name          string
 	RawDriver     []byte `json:"-"`
+	GuestOS       string
 }
 
 type Options struct {
