@@ -72,6 +72,7 @@ type Driver struct {
 	NoShare               bool
 	DNSProxy              bool
 	NoVTXCheck            bool
+	NoAccelerate3DOff     bool
 	ShareFolder           string
 }
 
@@ -200,6 +201,11 @@ func (d *Driver) GetCreateFlags() []mcnflag.Flag {
 			Usage:  "Disable checking for the availability of hardware virtualization before the vm is started",
 			EnvVar: "VIRTUALBOX_NO_VTX_CHECK",
 		},
+		mcnflag.BoolFlag{
+			Name:   "virtualbox-no-accelerate3d-off",
+			Usage:  "Disable turning off the possibly missing 3D graphics acceleration before the vm is started",
+			EnvVar: "VIRTUALBOX_NO_ACCELERATE3D_OFF",
+		},
 		mcnflag.StringFlag{
 			EnvVar: "VIRTUALBOX_SHARE_FOLDER",
 			Name:   "virtualbox-share-folder",
@@ -255,6 +261,7 @@ func (d *Driver) SetConfigFromFlags(flags drivers.DriverOptions) error {
 	d.NoShare = flags.Bool("virtualbox-no-share")
 	d.DNSProxy = !flags.Bool("virtualbox-no-dns-proxy")
 	d.NoVTXCheck = flags.Bool("virtualbox-no-vtx-check")
+	d.NoAccelerate3DOff = flags.Bool("virtualbox-no-accelerate3d-off")
 	d.ShareFolder = flags.String("virtualbox-share-folder")
 
 	return nil
@@ -415,9 +422,11 @@ func (d *Driver) CreateVM() error {
 		"--hwvirtex", "on",
 		"--nestedpaging", "on",
 		"--largepages", "on",
-		"--vtxvpid", "on",
-		"--accelerate3d", "off",
-		"--boot1", "dvd"}
+		"--vtxvpid", "on"}
+	if !d.NoAccelerate3DOff {
+		modifyFlags = append(modifyFlags, "--accelerate3d", "off")
+	}
+	modifyFlags = append(modifyFlags, "--boot1", "dvd")
 
 	if d.version > 6 {
 		modifyFlags = append(modifyFlags, "--natlocalhostreachable1", hostLoopbackReachable)
