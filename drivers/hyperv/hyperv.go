@@ -19,6 +19,7 @@ import (
 type Driver struct {
 	*drivers.BaseDriver
 	Boot2DockerURL       string
+	WindowsVHDUrl        string
 	VSwitch              string
 	DiskSize             int
 	MemSize              int
@@ -36,8 +37,7 @@ const (
 	defaultVLanID               = 0
 	defaultDisableDynamicMemory = false
 	defaultSwitchID             = "c08cb7b8-9b3c-408e-8e30-5e16a3aeb444"
-	defaultWindowsServerISOURL  = "https://go.microsoft.com/fwlink/p/?LinkID=2195280&clcid=0x409&culture=en-us&country=US"
-	defaultVMDvdDriveISOURL     = "https://github.com/vrapolinario/MinikubeWindowsContainers/raw/ed08391d61f4db9d3a670f5bfbb2cf8d4fe980f4/auto-install.iso"
+	defaultServerImageUrl       = "https://serverimagebuilder.blob.core.windows.net/windowsimagevhdx/GI-W11-001.vhdx"
 )
 
 // NewDriver creates a new Hyper-v driver with default settings.
@@ -46,6 +46,7 @@ func NewDriver(hostName, storePath string) *Driver {
 		DiskSize:             defaultDiskSize,
 		MemSize:              defaultMemory,
 		CPU:                  defaultCPU,
+		WindowsVHDUrl:        defaultServerImageUrl,
 		DisableDynamicMemory: defaultDisableDynamicMemory,
 		BaseDriver: &drivers.BaseDriver{
 			MachineName: hostName,
@@ -145,7 +146,7 @@ func (d *Driver) GetURL() (string, error) {
 func (d *Driver) GetState() (state.State, error) {
 	stdout, err := cmdOut("(", "Hyper-V\\Get-VM", d.MachineName, ").state")
 	if err != nil {
-		return state.None, fmt.Errorf("Failed to find the VM status")
+		return state.None, fmt.Errorf("failed to find the VM status")
 	}
 
 	resp := parseLines(stdout)
@@ -193,15 +194,10 @@ func (d *Driver) PreCreateCheck() error {
 	// that a download failure will not leave a machine half created.
 	b2dutils := mcnutils.NewB2dUtils(d.StorePath)
 
-	if mcnutils.ConfigGuestOSUtil.GetGuestOS() == "windows" {
-
-		if err := b2dutils.DownloadISO(b2dutils.GetImgCachePath(), "SERVER_EVAL_x64FRE_en-us.iso", defaultWindowsServerISOURL); err != nil {
-			return err
-		}
-
-		err = b2dutils.DownloadISO(b2dutils.GetImgCachePath(), "auto-install.iso", defaultVMDvdDriveISOURL)
-	} else {
+	if mcnutils.ConfigGuestOSUtil.GetGuestOS() != "windows" {
 		err = b2dutils.UpdateISOCache(d.Boot2DockerURL)
+	} else {
+		err = b2dutils.UpdateVHDCache(d.WindowsVHDUrl)
 	}
 
 	return err
@@ -211,7 +207,7 @@ func (d *Driver) Create() error {
 	b2dutils := mcnutils.NewB2dUtils(d.StorePath)
 
 	if mcnutils.ConfigGuestOSUtil.GetGuestOS() == "windows" {
-		if err := b2dutils.CopyWindowsIsoToMachineDir(d.MachineName); err != nil {
+		if err := b2dutils.CopyWindowsIsoToMachineDir(d.WindowsVHDUrl, d.MachineName); err != nil {
 			return err
 		}
 	} else {
@@ -243,18 +239,14 @@ func (d *Driver) Create() error {
 	if mcnutils.ConfigGuestOSUtil.GetGuestOS() == "windows" {
 		if err := cmd("Hyper-V\\New-VM",
 			d.MachineName,
-			"-Path", fmt.Sprintf("'%s'", d.ResolveStorePath(".")),
 			"-SwitchName", quote(d.VSwitch),
-			"-NewVHDPath", quote("VHD.vhdx"),
-			"-NewVHDSizeBytes", toMb(d.DiskSize),
-			"-BootDevice", quote("VHD"),
+			"-Generation", quote("2"),
 			"-MemoryStartupBytes", toMb(d.MemSize)); err != nil {
 			return err
 		}
 	} else {
 		if err := cmd("Hyper-V\\New-VM",
 			d.MachineName,
-			"-Path", fmt.Sprintf("'%s'", d.ResolveStorePath(".")),
 			"-SwitchName", quote(d.VSwitch),
 			"-MemoryStartupBytes", toMb(d.MemSize)); err != nil {
 			return err
@@ -296,11 +288,7 @@ func (d *Driver) Create() error {
 	}
 
 	if mcnutils.ConfigGuestOSUtil.GetGuestOS() == "windows" {
-		if err := cmd("Hyper-V\\Set-VMDvdDrive",
-			"-VMName", d.MachineName,
-			"-Path", quote(d.ResolveStorePath("SERVER_EVAL_x64FRE_en-us.iso"))); err != nil {
-			return err
-		}
+		// === Windows ===
 	} else {
 		if err := cmd("Hyper-V\\Set-VMDvdDrive",
 			"-VMName", d.MachineName,
@@ -310,11 +298,10 @@ func (d *Driver) Create() error {
 	}
 
 	if mcnutils.ConfigGuestOSUtil.GetGuestOS() == "windows" {
-		if err := cmd("Hyper-V\\Add-VMDvdDrive",
+		if err := cmd("Hyper-V\\Add-VMHardDiskDrive",
 			"-VMName", d.MachineName,
-			"-Path", quote(d.ResolveStorePath("auto-install.iso")),
-			"-ControllerNumber", quote("1"),
-			"-ControllerLocation", quote("1")); err != nil {
+			"-Path", quote(d.ResolveStorePath("GI-W11-001.vhdx")),
+			"-ControllerType", "SCSI"); err != nil {
 			return err
 		}
 	} else {
@@ -381,13 +368,6 @@ func (d *Driver) chooseVirtualSwitch() (string, error) {
 // waitForIP waits until the host has a valid IP
 func (d *Driver) waitForIP() (string, error) {
 	log.Infof("Waiting for host to start...")
-
-	if mcnutils.ConfigGuestOSUtil.GetGuestOS() == "windows" {
-		if err := TestWindowsInstallation(d); err != nil {
-			return "", err
-		}
-
-	}
 
 	for {
 		ip, _ := d.GetIP()
@@ -565,57 +545,4 @@ func (d *Driver) generateDiskImage() (string, error) {
 	}
 
 	return diskImage, nil
-}
-
-func GetCredentials() string {
-	password := "Minikube@2024"
-	username := "Administrator"
-
-	// Construct the PowerShell script
-	psScript := fmt.Sprintf(`$SecurePassword = ConvertTo-SecureString -String "%s" -AsPlainText -Force; `+
-		`$Credential = New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList "%s", $SecurePassword;`,
-		password, username)
-
-	// Invoke-Command -VMName "` + d.MachineName + `" -Credential $Credential -ScriptBlock {Get-Culture}
-	log.Debugf("psScript: %s", psScript)
-
-	return psScript
-}
-
-func TestWindowsInstallation(d *Driver) error {
-	log.Debugf("=== TestWindowsInstallation === Checking if Windows is installed on %s", d.MachineName)
-	const retryInterval = 45 * time.Second
-	const timeout = 120 * time.Second
-	elapsedTime := 0 * time.Second
-	start := time.Now()
-
-	for {
-		// Check if the timeout has been reached
-		if elapsedTime > timeout {
-			return fmt.Errorf("timeout reached while checking if Windows is installed on %s", d.MachineName)
-		}
-
-		// PowerShell script to check if the OS is installed
-		credential := GetCredentials()
-
-		psScript := fmt.Sprintf(`%s Invoke-Command -VMName %s -Credential $Credential -ScriptBlock {Get-WmiObject -Query 'SELECT * FROM Win32_OperatingSystem'}`, credential, d.MachineName)
-		stdout, err := cmdOut(psScript)
-
-		// psScript := fmt.Sprintf(`%s Invoke-Command -VMName %s -Credential $Credential -ScriptBlock {Get-WmiObject -Query 'SELECT * FROM Win32_OperatingSystem'}`, credential, d.MachineName)
-		// fullScript := fmt.Sprintf(`powershell -NoProfile -NonInteractive -Command "& { %s }"`, psScript)
-		// stdout, err := cmdOut("powershell", "-NoProfile", "-NonInteractive", "-Command", fullScript)
-
-		if err == nil {
-			log.Debugf("Windows is successfully installed on %s", d.MachineName)
-			log.Debugf("stdout: %s", stdout)
-			// parse the value of stdout to show the progress of the installation
-			break
-		} else {
-			log.Warnf("An error occurred while checking if Windows is installed on %s: %v", d.MachineName, err)
-		}
-
-		time.Sleep(retryInterval)
-		elapsedTime = time.Since(start)
-	}
-	return nil
 }

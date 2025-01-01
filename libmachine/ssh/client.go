@@ -168,14 +168,14 @@ func (client *NativeClient) dialSuccess() bool {
 	return true
 }
 
-func (client *NativeClient) session(command string) (*ssh.Client, *ssh.Session, error) {
+func (client *NativeClient) session(_ string) (*ssh.Client, *ssh.Session, error) {
 	if err := mcnutils.WaitFor(client.dialSuccess); err != nil {
-		return nil, nil, fmt.Errorf("Error attempting SSH client dial: %s", err)
+		return nil, nil, fmt.Errorf("error attempting SSH client dial: %s", err)
 	}
 
 	conn, err := ssh.Dial("tcp", net.JoinHostPort(client.Hostname, strconv.Itoa(client.Port)), &client.Config)
 	if err != nil {
-		return nil, nil, fmt.Errorf("Mysterious error dialing TCP for SSH (we already succeeded at least once) : %s", err)
+		return nil, nil, fmt.Errorf("mysterious error dialing TCP for SSH (we already succeeded at least once): %s", err)
 	}
 	session, err := conn.NewSession()
 
