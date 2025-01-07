@@ -37,7 +37,7 @@ const (
 	defaultVLanID               = 0
 	defaultDisableDynamicMemory = false
 	defaultSwitchID             = "c08cb7b8-9b3c-408e-8e30-5e16a3aeb444"
-	defaultServerImageUrl       = "https://serverimagebuilder.blob.core.windows.net/windowsimagevhdx/GI-W11-001.vhdx"
+	defaultServerImageUrl       = "https://minikubevhdimagebuider.blob.core.windows.net/minikubevhdimage/GI-W11-001.vhdx"
 )
 
 // NewDriver creates a new Hyper-v driver with default settings.
