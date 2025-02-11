@@ -24,13 +24,16 @@ type GuestOSUtil struct {
 }
 
 func SetGuestOSUtil(guestOS string) {
-	log.Debugf("==== we are being called")
 	ConfigGuestOSUtil = &GuestOSUtil{
 		os: guestOS,
 	}
 }
 
 func (g *GuestOSUtil) GetGuestOS() string {
+	if g == nil {
+		log.Debugf("GuestOSUtil is not initialized")
+		return "unknown"
+	}
 	return g.os
 }
 

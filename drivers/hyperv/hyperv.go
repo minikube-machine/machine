@@ -37,7 +37,7 @@ const (
 	defaultVLanID               = 0
 	defaultDisableDynamicMemory = false
 	defaultSwitchID             = "c08cb7b8-9b3c-408e-8e30-5e16a3aeb444"
-	defaultServerImageUrl       = "https://minikubevhdimagebuider.blob.core.windows.net/minikubevhdimage/GI-W11-002.vhdx"
+	defaultServerImageUrl       = "https://minikubevhdimagebuider.blob.core.windows.net/minikubevhdimage/WIN-SER-2025.vhdx"
 )
 
 // NewDriver creates a new Hyper-v driver with default settings.
@@ -207,7 +207,8 @@ func (d *Driver) Create() error {
 	b2dutils := mcnutils.NewB2dUtils(d.StorePath)
 
 	if mcnutils.ConfigGuestOSUtil.GetGuestOS() == "windows" {
-		if err := b2dutils.CopyWindowsIsoToMachineDir(d.WindowsVHDUrl, d.MachineName); err != nil {
+		d.SSHUser = "Administrator"
+		if err := b2dutils.CopyWindowsVHDToMachineDir(d.WindowsVHDUrl, d.MachineName); err != nil {
 			return err
 		}
 	} else {
@@ -217,6 +218,7 @@ func (d *Driver) Create() error {
 	}
 
 	log.Infof("Creating SSH key...")
+
 	if err := ssh.GenerateSSHKey(d.GetSSHKeyPath()); err != nil {
 		return err
 	}
@@ -300,7 +302,7 @@ func (d *Driver) Create() error {
 	if mcnutils.ConfigGuestOSUtil.GetGuestOS() == "windows" {
 		if err := cmd("Hyper-V\\Add-VMHardDiskDrive",
 			"-VMName", d.MachineName,
-			"-Path", quote(d.ResolveStorePath("GI-W11-001.vhdx")),
+			"-Path", quote(d.ResolveStorePath("WIN-SER-2025.vhdx")),
 			"-ControllerType", "SCSI"); err != nil {
 			return err
 		}

@@ -24,7 +24,7 @@ import (
 const (
 	defaultURL                 = "https://api.github.com/repos/boot2docker/boot2docker/releases"
 	defaultISOFilename         = "boot2docker.iso"
-	defaultServerImageFilename = "GI-W11-001.vhdx"
+	defaultServerImageFilename = "WIN-SER-2025.vhdx"
 	defaultVolumeIDOffset      = int64(0x8028)
 	versionPrefix              = "-v"
 	defaultVolumeIDLength      = 32
@@ -525,7 +525,7 @@ func (b *B2dUtils) CopyIsoToMachineDir(isoURL, machineName string) error {
 	return b.DownloadISO(machineDir, b.filename(), downloadURL)
 }
 
-func (b *B2dUtils) CopyWindowsIsoToMachineDir(VHDUrl, machineName string) error {
+func (b *B2dUtils) CopyWindowsVHDToMachineDir(VHDUrl, machineName string) error {
 
 	if err := b.UpdateVHDCache(VHDUrl); err != nil {
 		return err

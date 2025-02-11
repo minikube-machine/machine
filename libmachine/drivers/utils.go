@@ -10,33 +10,49 @@ import (
 
 func GetSSHClientFromDriver(d Driver) (ssh.Client, error) {
 	address, err := d.GetSSHHostname()
+	log.Debugf("GetSSHHostname: %s", address)
 	if err != nil {
 		return nil, err
 	}
 
 	port, err := d.GetSSHPort()
+	log.Debugf("GetSSHPort: %d", port)
 	if err != nil {
 		return nil, err
 	}
 
 	var auth *ssh.Auth
-	if d.GetSSHKeyPath() == "" {
-		auth = &ssh.Auth{}
+	log.Debugf("GetSSHKeyPath: %s", d.GetSSHKeyPath())
+
+	if mcnutils.ConfigGuestOSUtil.GetGuestOS() == "windows" {
+		if d.GetSSHKeyPath() == "" {
+			auth = &ssh.Auth{}
+		} else {
+			auth = &ssh.Auth{
+				Keys:      []string{d.GetSSHKeyPath()},
+				Passwords: []string{"password"}, // Add a password if needed
+			}
+		}
 	} else {
-		auth = &ssh.Auth{
-			Keys: []string{d.GetSSHKeyPath()},
+		if d.GetSSHKeyPath() == "" {
+			auth = &ssh.Auth{}
+		} else {
+			auth = &ssh.Auth{
+				Keys: []string{d.GetSSHKeyPath()},
+			}
 		}
 	}
 
+	log.Debugf("GetSSHUsername: %s", d.GetSSHUsername())
 	client, err := ssh.NewClient(d.GetSSHUsername(), address, port, auth)
 	return client, err
 
 }
 
 func RunSSHCommandFromDriver(d Driver, command string) (string, error) {
-	if mcnutils.ConfigGuestOSUtil.GetGuestOS() == "windows" {
-		return "", fmt.Errorf("SSH commands are not supported on Windows")
-	}
+	// if mcnutils.ConfigGuestOSUtil.GetGuestOS() == "windows" {
+	// 	return "", fmt.Errorf("SSH commands are not supported on Windows")
+	// }
 
 	client, err := GetSSHClientFromDriver(d)
 	if err != nil {
