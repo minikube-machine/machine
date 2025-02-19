@@ -233,7 +233,19 @@ func (d *Driver) Create() error {
 	}
 	log.Infof("Using switch %q", d.VSwitch)
 
-	diskImage, err := d.generateDiskImage()
+	if mcnutils.ConfigGuestOSUtil.GetGuestOS() == "windows" {
+		log.Infof("Adding SSH key to the VHDX...")
+		if err := d.makeDiskImage(); err != nil {
+			log.Errorf("Error creating disk image: %s", err)
+			return err
+		}
+	}
+
+	var diskImage string
+	var err error
+	if mcnutils.ConfigGuestOSUtil.GetGuestOS() != "windows" {
+		diskImage, err = d.generateDiskImage()
+	}
 	if err != nil {
 		return err
 	}
@@ -495,6 +507,11 @@ func (d *Driver) GetIP() (string, error) {
 
 func (d *Driver) publicSSHKeyPath() string {
 	return d.GetSSHKeyPath() + ".pub"
+}
+
+// makeDiskImage bundles ssh key in a vhd
+func (d *Driver) makeDiskImage() error {
+	return mcnutils.WriteSSHKeyToVHDX(d.ResolveStorePath(mcnutils.GetDefaultServerImageFilename()), d.publicSSHKeyPath())
 }
 
 // generateDiskImage creates a small fixed vhd, put the tar in, convert to dynamic, then resize
