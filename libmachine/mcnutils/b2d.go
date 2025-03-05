@@ -12,7 +12,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -622,65 +621,4 @@ func MakeDiskImage(publicSSHKeyPath string) (*bytes.Buffer, error) {
 	}
 
 	return buf, nil
-}
-
-// function to return defaultServerImageFilename
-func GetDefaultServerImageFilename() string {
-	return defaultServerImageFilename
-}
-
-func WriteSSHKeyToVHDX(vhdxPath, publicSSHKeyPath string) error {
-	mountDir := "D:\\"
-	sshDir := mountDir + "ProgramData\\ssh\\"
-	adminAuthKeys := sshDir + "administrators_authorized_keys"
-
-	pubKey, err := ioutil.ReadFile(publicSSHKeyPath)
-	if err != nil {
-		return fmt.Errorf("failed to read public SSH key: %w", err)
-	}
-
-	if err := mountVHDX(vhdxPath); err != nil {
-		return fmt.Errorf("failed to mount VHDX: %w", err)
-	}
-
-	if err := os.MkdirAll(sshDir, 0755); err != nil {
-		return fmt.Errorf("failed to create SSH directory: %w", err)
-	}
-
-	if err := ioutil.WriteFile(adminAuthKeys, pubKey, 0644); err != nil {
-		return fmt.Errorf("failed to write public key: %w", err)
-	}
-
-	cmd := exec.Command("icacls.exe", adminAuthKeys, "/inheritance:r", "/grant", "Administrators:F", "/grant", "SYSTEM:F")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to set permissions: %w", err)
-	}
-
-	if err := unmountVHDX(vhdxPath); err != nil {
-		return fmt.Errorf("failed to unmount VHDX: %w", err)
-	}
-
-	return nil
-}
-
-func mountVHDX(vhdxPath string) error {
-	cmd := exec.Command("powershell", "-Command", fmt.Sprintf(
-		"Mount-DiskImage -ImagePath '%s' -StorageType VHDX -PassThru | Get-Disk | Set-Disk -IsReadOnly $false",
-		vhdxPath,
-	))
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
-}
-
-func unmountVHDX(vhdxPath string) error {
-	cmd := exec.Command("powershell", "-Command", fmt.Sprintf(
-		"Dismount-DiskImage -ImagePath '%s'",
-		vhdxPath,
-	))
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
 }

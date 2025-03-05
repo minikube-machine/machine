@@ -3,6 +3,7 @@ package hyperv
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"os"
 	"strings"
@@ -37,7 +38,8 @@ const (
 	defaultVLanID               = 0
 	defaultDisableDynamicMemory = false
 	defaultSwitchID             = "c08cb7b8-9b3c-408e-8e30-5e16a3aeb444"
-	defaultServerImageUrl       = "https://minikubevhdimagebuider.blob.core.windows.net/minikubevhdimage/WIN-SER-2025.vhdx"
+	defaultWindowsServerVHD     = "https://minikubevhdimagebuider.blob.core.windows.net/minikubevhdimage/WIN-SER-2025.vhdx"
+	defaultServerImageFilename  = "WIN-SER-2025.vhdx"
 )
 
 // NewDriver creates a new Hyper-v driver with default settings.
@@ -46,7 +48,7 @@ func NewDriver(hostName, storePath string) *Driver {
 		DiskSize:             defaultDiskSize,
 		MemSize:              defaultMemory,
 		CPU:                  defaultCPU,
-		WindowsVHDUrl:        defaultServerImageUrl,
+		WindowsVHDUrl:        defaultWindowsServerVHD,
 		DisableDynamicMemory: defaultDisableDynamicMemory,
 		BaseDriver: &drivers.BaseDriver{
 			MachineName: hostName,
@@ -235,7 +237,7 @@ func (d *Driver) Create() error {
 
 	if mcnutils.ConfigGuestOSUtil.GetGuestOS() == "windows" {
 		log.Infof("Adding SSH key to the VHDX...")
-		if err := mcnutils.WriteSSHKeyToVHDX(d.ResolveStorePath(mcnutils.GetDefaultServerImageFilename()), d.publicSSHKeyPath()); err != nil {
+		if err := writeSSHKeyToVHDX(d.ResolveStorePath(defaultServerImageFilename), d.publicSSHKeyPath()); err != nil {
 			log.Errorf("Error creating disk image: %s", err)
 			return err
 		}
@@ -250,21 +252,17 @@ func (d *Driver) Create() error {
 		return err
 	}
 
+	vmGeneration := "1"
 	if mcnutils.ConfigGuestOSUtil.GetGuestOS() == "windows" {
-		if err := cmd("Hyper-V\\New-VM",
-			d.MachineName,
-			"-SwitchName", quote(d.VSwitch),
-			"-Generation", quote("2"),
-			"-MemoryStartupBytes", toMb(d.MemSize)); err != nil {
-			return err
-		}
-	} else {
-		if err := cmd("Hyper-V\\New-VM",
-			d.MachineName,
-			"-SwitchName", quote(d.VSwitch),
-			"-MemoryStartupBytes", toMb(d.MemSize)); err != nil {
-			return err
-		}
+		vmGeneration = "2"
+	}
+
+	if err := cmd("Hyper-V\\New-VM",
+		d.MachineName,
+		"-SwitchName", quote(d.VSwitch),
+		"-Generation", quote(vmGeneration),
+		"-MemoryStartupBytes", toMb(d.MemSize)); err != nil {
+		return err
 	}
 
 	if d.DisableDynamicMemory {
@@ -559,4 +557,51 @@ func (d *Driver) generateDiskImage() (string, error) {
 	}
 
 	return diskImage, nil
+}
+
+func writeSSHKeyToVHDX(vhdxPath, publicSSHKeyPath string) error {
+	mountDir := "E:\\"
+	sshDir := mountDir + "ProgramData\\ssh\\"
+	adminAuthKeys := sshDir + "administrators_authorized_keys"
+
+	pubKey, err := ioutil.ReadFile(publicSSHKeyPath)
+	if err != nil {
+		return fmt.Errorf("failed to read public SSH key: %w", err)
+	}
+
+	err = cmd("Mount-DiskImage", "-ImagePath", quote(vhdxPath), "-StorageType", "VHDX", "-PassThru", "|",
+		"Get-Disk", "|", "Set-Disk", "-IsReadOnly", "$false")
+	if err != nil {
+		return fmt.Errorf("failed to mount VHDX: %w", err)
+	}
+	defer func() {
+		// Ensure unmounting even in case of failure
+		unmountErr := cmd("Dismount-DiskImage", "-ImagePath", quote(vhdxPath))
+		if unmountErr != nil {
+			log.Warnf("Failed to unmount VHDX: %v", unmountErr)
+		}
+	}()
+
+	// Wait for mount stability
+	time.Sleep(2 * time.Second)
+
+	// Ensure mount directory exists
+	if _, err := os.Stat(mountDir); os.IsNotExist(err) {
+		return fmt.Errorf("mount point %s does not exist", mountDir)
+	}
+
+	if err := os.MkdirAll(sshDir, 0755); err != nil {
+		return fmt.Errorf("failed to create SSH directory: %w", err)
+	}
+
+	if err := ioutil.WriteFile(adminAuthKeys, pubKey, 0644); err != nil {
+		return fmt.Errorf("failed to write public key: %w", err)
+	}
+
+	err = cmd("icacls.exe", quote(adminAuthKeys), "/inheritance:r", "/grant", "Administrators:F", "/grant", "SYSTEM:F")
+	if err != nil {
+		return fmt.Errorf("failed to set permissions: %w", err)
+	}
+
+	return nil
 }
