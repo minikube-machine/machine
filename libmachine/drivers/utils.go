@@ -34,10 +34,6 @@ func GetSSHClientFromDriver(d Driver) (ssh.Client, error) {
 }
 
 func RunSSHCommandFromDriver(d Driver, command string) (string, error) {
-	// if mcnutils.ConfigGuestOSUtil.GetGuestOS() == "windows" {
-	// 	return "", fmt.Errorf("SSH commands are not supported on Windows")
-	// }
-
 	client, err := GetSSHClientFromDriver(d)
 	if err != nil {
 		return "", err
