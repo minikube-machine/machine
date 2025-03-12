@@ -2,10 +2,13 @@ package hyperv
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
 	"os"
+	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -558,34 +561,41 @@ func (d *Driver) generateDiskImage() (string, error) {
 
 	return diskImage, nil
 }
-
 func writeSSHKeyToVHDX(vhdxPath, publicSSHKeyPath string) error {
-	mountDir := "E:\\"
-	sshDir := mountDir + "ProgramData\\ssh\\"
-	adminAuthKeys := sshDir + "administrators_authorized_keys"
+	output, err := cmdOut(
+		"powershell", "-Command",
+		"(Get-DiskImage -ImagePath", quote(vhdxPath), "| Mount-DiskImage -PassThru) | Out-Null;",
+		"$diskNumber = (Get-DiskImage -ImagePath", quote(vhdxPath), "| Get-Disk).Number;",
+		"Set-Disk -Number $diskNumber -IsReadOnly $false;",
+		"(Get-Disk -Number $diskNumber | Get-Partition | Get-Volume).DriveLetter",
+	)
+	if err != nil {
+		return fmt.Errorf("failed to mount VHDX and retrieve mount directory: %w", err)
+	}
+
+	regex := regexp.MustCompile(`\s+|\r|\n`)
+	driveLetter := regex.ReplaceAllString(output, "")
+
+	if driveLetter == "" {
+		return errors.New("no drive letter assigned to VHDX")
+	}
+
+	mountDir := strings.TrimSpace(driveLetter) + ":\\"
+
+	defer func() {
+		if unmountErr := cmd("Dismount-DiskImage", "-ImagePath", quote(vhdxPath)); unmountErr != nil {
+			log.Warnf("Failed to unmount VHDX: %v", unmountErr)
+		}
+	}()
+
+	sshDir := filepath.Join(mountDir, "ProgramData", "ssh")
+	adminAuthKeys := filepath.Join(sshDir, "administrators_authorized_keys")
 
 	pubKey, err := ioutil.ReadFile(publicSSHKeyPath)
 	if err != nil {
 		return fmt.Errorf("failed to read public SSH key: %w", err)
 	}
 
-	err = cmd("Mount-DiskImage", "-ImagePath", quote(vhdxPath), "-StorageType", "VHDX", "-PassThru", "|",
-		"Get-Disk", "|", "Set-Disk", "-IsReadOnly", "$false")
-	if err != nil {
-		return fmt.Errorf("failed to mount VHDX: %w", err)
-	}
-	defer func() {
-		// Ensure unmounting even in case of failure
-		unmountErr := cmd("Dismount-DiskImage", "-ImagePath", quote(vhdxPath))
-		if unmountErr != nil {
-			log.Warnf("Failed to unmount VHDX: %v", unmountErr)
-		}
-	}()
-
-	// Wait for mount stability
-	time.Sleep(2 * time.Second)
-
-	// Ensure mount directory exists
 	if _, err := os.Stat(mountDir); os.IsNotExist(err) {
 		return fmt.Errorf("mount point %s does not exist", mountDir)
 	}

@@ -106,7 +106,7 @@ func isWindowsAdministrator() (bool, error) {
 }
 
 func quote(text string) string {
-	return fmt.Sprintf("'%s'", text)
+	return fmt.Sprintf(`"%s"`, text)
 }
 
 func toMb(value int) string {
