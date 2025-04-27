@@ -37,7 +37,7 @@ func create() {
 		return
 	}
 
-	h, err := client.NewHost("virtualbox", data)
+	h, err := client.NewHost("virtualbox", "linux", data)
 	if err != nil {
 		log.Error(err)
 		return
@@ -82,7 +82,7 @@ func streaming() {
 		return
 	}
 
-	h, err := client.NewHost("virtualbox", data)
+	h, err := client.NewHost("virtualbox", "linux", data)
 	if err != nil {
 		log.Error(err)
 		return

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/docker/machine/libmachine/log"
 )
@@ -26,47 +27,61 @@ func (pw *ProgressWriter) Write(p []byte) (int, error) {
 }
 
 func (pw *ProgressWriter) PrintProgress() {
-	fmt.Printf("\rDownloading... %d/%d bytes complete", pw.Downloaded, pw.Total)
+	fmt.Printf("\r        > %s...: %d / %d bytes complete \t", defaultServerImageFilename, pw.Downloaded, pw.Total)
 }
 
-func DownloadPart(url string, start, end int64, partFileName string, pw *ProgressWriter, wg *sync.WaitGroup) {
+func DownloadPart(url string, start, end int64, partFileName string, pw *ProgressWriter, wg *sync.WaitGroup, retryLimit int) error {
 	defer wg.Done()
 
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		log.Infof("Error creating request: %v", err)
-		return
-	}
-	req.Header.Set("Range", fmt.Sprintf("bytes=%d-%d", start, end))
+	var resp *http.Response
 
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		log.Infof("Error downloading part: %v", err)
-		return
-	}
-	defer resp.Body.Close()
+	// Retry loop for downloading a part
+	for retries := 0; retries <= retryLimit; retries++ {
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			log.Errorf("Error creating request: %v", err)
+			return err
+		}
+		req.Header.Set("Range", fmt.Sprintf("bytes=%d-%d", start, end))
 
-	if resp.StatusCode != http.StatusPartialContent {
-		log.Infof("Error: expected status 206 Partial Content, got %d", resp.StatusCode)
-		return
+		resp, err = http.DefaultClient.Do(req)
+		if err != nil {
+			log.Errorf("Error downloading part: %v", err)
+			// Retry after waiting a bit
+			time.Sleep(time.Duration(2<<retries) * time.Second) // Exponential backoff
+			continue
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode == http.StatusPartialContent {
+			partFile, err := os.Create(partFileName)
+			if err != nil {
+				log.Errorf("Error creating part file: %v", err)
+				return err
+			}
+			defer partFile.Close()
+
+			buf := make([]byte, 32*1024) // 32 KB buffer
+			_, err = io.CopyBuffer(io.MultiWriter(partFile, pw), resp.Body, buf)
+			if err != nil {
+				log.Errorf("Error saving part: %v", err)
+				return err
+			}
+			return nil // Successful download, exit retry loop
+		}
+
+		// If server does not return expected status, retry
+		log.Errorf("Error: expected status 206 Partial Content, got %d", resp.StatusCode)
+		// Retry after waiting
+		time.Sleep(time.Duration(2<<retries) * time.Second) // Exponential backoff
 	}
 
-	partFile, err := os.Create(partFileName)
-	if err != nil {
-		log.Infof("Error creating part file: %v", err)
-		return
-	}
-	defer partFile.Close()
-
-	buf := make([]byte, 32*1024) // 32 KB buffer
-	_, err = io.CopyBuffer(io.MultiWriter(partFile, pw), resp.Body, buf)
-	if err != nil {
-		log.Infof("Error saving part: %v", err)
-		return
-	}
+	// If all retries fail, return an error
+	log.Errorf("Failed to download part after %d retries", retryLimit)
+	return fmt.Errorf("failed to download part after %d retries", retryLimit)
 }
 
-func DownloadVHDX(url string, filePath string, numParts int) error {
+func DownloadVHDX(url string, filePath string, numParts int, retryLimit int) error {
 	resp, err := http.Head(url)
 	if err != nil {
 		return fmt.Errorf("failed to get file info: %w", err)
@@ -83,6 +98,8 @@ func DownloadVHDX(url string, filePath string, numParts int) error {
 	var wg sync.WaitGroup
 
 	partFiles := make([]string, numParts)
+	var downloadErrors []error
+
 	for i := 0; i < numParts; i++ {
 		start := int64(i) * partSize
 		end := start + partSize - 1
@@ -94,11 +111,22 @@ func DownloadVHDX(url string, filePath string, numParts int) error {
 		partFiles[i] = partFileName
 
 		wg.Add(1)
-		go DownloadPart(url, start, end, partFileName, pw, &wg)
+		go func(i int) {
+			err := DownloadPart(url, start, end, partFileName, pw, &wg, retryLimit)
+			if err != nil {
+				downloadErrors = append(downloadErrors, fmt.Errorf("failed to download part %d: %w", i, err))
+			}
+		}(i)
 	}
 
 	wg.Wait()
 
+	// If there are any errors during download, return them
+	if len(downloadErrors) > 0 {
+		return fmt.Errorf("download failed for the following parts: %v", downloadErrors)
+	}
+
+	// Proceed with merging the parts as before
 	out, err := os.Create(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to create file: %w", err)
@@ -120,6 +148,6 @@ func DownloadVHDX(url string, filePath string, numParts int) error {
 		os.Remove(partFileName)
 	}
 
-	log.Infof("\nDownload complete")
+	log.Infof("\n\r\t> Download complete")
 	return nil
 }

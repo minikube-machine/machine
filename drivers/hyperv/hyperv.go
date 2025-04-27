@@ -577,10 +577,11 @@ func writeSSHKeyToVHDX(vhdxPath, publicSSHKeyPath string) error {
 	driveLetter := regex.ReplaceAllString(output, "")
 
 	if driveLetter == "" {
+		log.Debugf("No drive letter assigned to VHDX")
 		return errors.New("no drive letter assigned to VHDX")
 	}
 
-	mountDir := strings.TrimSpace(driveLetter) + ":\\"
+	mountDir := strings.TrimSpace(driveLetter) + ":" + string(os.PathSeparator)
 
 	defer func() {
 		if unmountErr := cmd("Dismount-DiskImage", "-ImagePath", quote(vhdxPath)); unmountErr != nil {

@@ -456,7 +456,10 @@ func (b *B2dUtils) UpdateVHDCache(defaultVHDUrl string) error {
 
 		filePath := filepath.Join(b.imgCachePath, defaultServerImageFilename)
 
-		err := DownloadVHDX(defaultVHDUrl, filePath, 16) // Download using 16 parts
+		fmt.Printf("\n")
+		fmt.Printf("    * Downloading and caching Windows Server VHD image...\n")
+		fmt.Printf("    * This may take a while...\n")
+		err := DownloadVHDX(defaultVHDUrl, filePath, 16, 1) // Download using 16 parts
 
 		if err != nil {
 			return fmt.Errorf("Error: %v", err)
