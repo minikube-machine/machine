@@ -41,8 +41,7 @@ const (
 	defaultVLanID               = 0
 	defaultDisableDynamicMemory = false
 	defaultSwitchID             = "c08cb7b8-9b3c-408e-8e30-5e16a3aeb444"
-	defaultWindowsServerVHD     = "https://minikubevhdimagebuider.blob.core.windows.net/minikubevhdimage/WIN-SER-2025.vhdx"
-	defaultServerImageFilename  = "WIN-SER-2025.vhdx"
+	defaultServerImageFilename  = "hybrid-minikube-windows-server.vhdx"
 )
 
 // NewDriver creates a new Hyper-v driver with default settings.
@@ -51,7 +50,7 @@ func NewDriver(hostName, storePath string) *Driver {
 		DiskSize:             defaultDiskSize,
 		MemSize:              defaultMemory,
 		CPU:                  defaultCPU,
-		WindowsVHDUrl:        defaultWindowsServerVHD,
+		WindowsVHDUrl:        mcnutils.ConfigGuest.GetVHDUrl(),
 		DisableDynamicMemory: defaultDisableDynamicMemory,
 		BaseDriver: &drivers.BaseDriver{
 			MachineName: hostName,
@@ -199,7 +198,7 @@ func (d *Driver) PreCreateCheck() error {
 	// that a download failure will not leave a machine half created.
 	b2dutils := mcnutils.NewB2dUtils(d.StorePath)
 
-	if mcnutils.ConfigGuestOSUtil.GetGuestOS() != "windows" {
+	if mcnutils.ConfigGuest.GetGuestOS() != "windows" {
 		err = b2dutils.UpdateISOCache(d.Boot2DockerURL)
 	} else {
 		err = b2dutils.UpdateVHDCache(d.WindowsVHDUrl)
@@ -211,7 +210,7 @@ func (d *Driver) PreCreateCheck() error {
 func (d *Driver) Create() error {
 	b2dutils := mcnutils.NewB2dUtils(d.StorePath)
 
-	if mcnutils.ConfigGuestOSUtil.GetGuestOS() == "windows" {
+	if mcnutils.ConfigGuest.GetGuestOS() == "windows" {
 		d.SSHUser = "Administrator"
 		if err := b2dutils.CopyWindowsVHDToMachineDir(d.WindowsVHDUrl, d.MachineName); err != nil {
 			return err
@@ -238,7 +237,7 @@ func (d *Driver) Create() error {
 	}
 	log.Infof("Using switch %q", d.VSwitch)
 
-	if mcnutils.ConfigGuestOSUtil.GetGuestOS() == "windows" {
+	if mcnutils.ConfigGuest.GetGuestOS() == "windows" {
 		log.Infof("Adding SSH key to the VHDX...")
 		if err := writeSSHKeyToVHDX(d.ResolveStorePath(defaultServerImageFilename), d.publicSSHKeyPath()); err != nil {
 			log.Errorf("Error creating disk image: %s", err)
@@ -248,7 +247,7 @@ func (d *Driver) Create() error {
 
 	var diskImage string
 	var err error
-	if mcnutils.ConfigGuestOSUtil.GetGuestOS() != "windows" {
+	if mcnutils.ConfigGuest.GetGuestOS() != "windows" {
 		diskImage, err = d.generateDiskImage()
 	}
 	if err != nil {
@@ -256,7 +255,7 @@ func (d *Driver) Create() error {
 	}
 
 	vmGeneration := "1"
-	if mcnutils.ConfigGuestOSUtil.GetGuestOS() == "windows" {
+	if mcnutils.ConfigGuest.GetGuestOS() == "windows" {
 		vmGeneration = "2"
 	}
 
@@ -302,7 +301,7 @@ func (d *Driver) Create() error {
 		}
 	}
 
-	if mcnutils.ConfigGuestOSUtil.GetGuestOS() == "windows" {
+	if mcnutils.ConfigGuest.GetGuestOS() == "windows" {
 		// === Windows ===
 	} else {
 		if err := cmd("Hyper-V\\Set-VMDvdDrive",
@@ -312,10 +311,10 @@ func (d *Driver) Create() error {
 		}
 	}
 
-	if mcnutils.ConfigGuestOSUtil.GetGuestOS() == "windows" {
+	if mcnutils.ConfigGuest.GetGuestOS() == "windows" {
 		if err := cmd("Hyper-V\\Add-VMHardDiskDrive",
 			"-VMName", d.MachineName,
-			"-Path", quote(d.ResolveStorePath("WIN-SER-2025.vhdx")),
+			"-Path", quote(d.ResolveStorePath("hybrid-minikube-windows-server.vhdx")),
 			"-ControllerType", "SCSI"); err != nil {
 			return err
 		}

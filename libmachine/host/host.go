@@ -44,7 +44,7 @@ type Host struct {
 	HostOptions   *Options
 	Name          string
 	RawDriver     []byte `json:"-"`
-	GuestOS       string
+	Guest         Guest
 }
 
 type Options struct {
@@ -60,6 +60,12 @@ type Metadata struct {
 	ConfigVersion int
 	DriverName    string
 	HostOptions   Options
+}
+
+type Guest struct {
+	Name    string
+	Version string
+	URL     string
 }
 
 func ValidateHostName(name string) bool {

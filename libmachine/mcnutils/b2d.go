@@ -24,7 +24,7 @@ import (
 const (
 	defaultURL                 = "https://api.github.com/repos/boot2docker/boot2docker/releases"
 	defaultISOFilename         = "boot2docker.iso"
-	defaultServerImageFilename = "WIN-SER-2025.vhdx"
+	defaultServerImageFilename = "hybrid-minikube-windows-server.vhdx"
 	defaultVolumeIDOffset      = int64(0x8028)
 	versionPrefix              = "-v"
 	defaultVolumeIDLength      = 32

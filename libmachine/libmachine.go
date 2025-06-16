@@ -28,7 +28,7 @@ import (
 
 type API interface {
 	io.Closer
-	NewHost(driverName string, guestOS string, rawDriver []byte) (*host.Host, error)
+	NewHost(driverName string, guest host.Guest, rawDriver []byte) (*host.Host, error)
 	DefineGuest(h *host.Host)
 	Create(h *host.Host) error
 	persist.Store
@@ -54,7 +54,7 @@ func NewClient(storePath, certsDir string) *Client {
 	}
 }
 
-func (api *Client) NewHost(driverName string, guestOS string, rawDriver []byte) (*host.Host, error) {
+func (api *Client) NewHost(driverName string, guest host.Guest, rawDriver []byte) (*host.Host, error) {
 	driver, err := api.clientDriverFactory.NewRPCClientDriver(driverName, rawDriver)
 	if err != nil {
 		return nil, err
@@ -65,7 +65,7 @@ func (api *Client) NewHost(driverName string, guestOS string, rawDriver []byte) 
 		Name:          driver.GetMachineName(),
 		Driver:        driver,
 		DriverName:    driver.DriverName(),
-		GuestOS:       guestOS,
+		Guest:         guest,
 		HostOptions: &host.Options{
 			AuthOptions: &auth.Options{
 				CertDir:          api.certsDir,
@@ -116,7 +116,7 @@ func (api *Client) Load(name string) (*host.Host, error) {
 }
 
 func (api *Client) DefineGuest(h *host.Host) {
-	mcnutils.SetGuestOSUtil(h.GuestOS)
+	mcnutils.SetGuestUtil(h.Guest.Name, h.Guest.URL)
 }
 
 // Create is the wrapper method which covers all of the boilerplate around
