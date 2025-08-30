@@ -559,7 +559,7 @@ func (d *Driver) generateDiskImage() (string, error) {
 
 	return diskImage, nil
 }
-func writeSSHKeyToVHDX(vhdxPath, publicSSHKeyPath string) error {
+func writeSSHKeyToVHDX(vhdxPath, publicSSHKeyPath string) (retErr error) {
 	output, err := cmdOut(
 		"powershell", "-Command",
 		"(Get-DiskImage -ImagePath", quote(vhdxPath), "| Mount-DiskImage -PassThru) | Out-Null;",
@@ -583,16 +583,16 @@ func writeSSHKeyToVHDX(vhdxPath, publicSSHKeyPath string) error {
 
 	defer func() {
 		if unmountErr := cmd("Dismount-DiskImage", "-ImagePath", quote(vhdxPath)); unmountErr != nil {
-			log.Warnf("Failed to unmount VHDX: %v", unmountErr)
+			retErr = errors.Join(retErr, fmt.Errorf("failed to unmount VHDX: %w", unmountErr))
 		}
 	}()
 
 	sshDir := filepath.Join(mountDir, "ProgramData", "ssh")
 	adminAuthKeys := filepath.Join(sshDir, "administrators_authorized_keys")
 
-	pubKey, err := ioutil.ReadFile(publicSSHKeyPath)
+	pubKey, err := os.ReadFile(publicSSHKeyPath)
 	if err != nil {
-		return fmt.Errorf("failed to read public SSH key: %w", err)
+		return fmt.Errorf("failed to read public SSH key from %s: %w", publicSSHKeyPath, err)
 	}
 
 	if _, err := os.Stat(mountDir); os.IsNotExist(err) {
@@ -607,9 +607,8 @@ func writeSSHKeyToVHDX(vhdxPath, publicSSHKeyPath string) error {
 		return fmt.Errorf("failed to write public key: %w", err)
 	}
 
-	err = cmd("icacls.exe", quote(adminAuthKeys), "/inheritance:r", "/grant", "Administrators:F", "/grant", "SYSTEM:F")
-	if err != nil {
-		return fmt.Errorf("failed to set permissions: %w", err)
+	if err := cmd("icacls.exe", quote(adminAuthKeys), "/inheritance:r", "/grant", "Administrators:F", "/grant", "SYSTEM:F"); err != nil {
+		return fmt.Errorf("failed to set permissions on %s: %w", adminAuthKeys, err)
 	}
 
 	return nil
