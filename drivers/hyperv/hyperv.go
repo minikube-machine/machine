@@ -301,9 +301,8 @@ func (d *Driver) Create() error {
 		}
 	}
 
-	if mcnutils.ConfigGuest.GetGuestOS() == "windows" {
-		// === Windows ===
-	} else {
+	if mcnutils.ConfigGuest.GetGuestOS() != "windows" {
+		log.Infof("Attaching ISO and disk...")
 		if err := cmd("Hyper-V\\Set-VMDvdDrive",
 			"-VMName", d.MachineName,
 			"-Path", quote(d.ResolveStorePath("boot2docker.iso"))); err != nil {
