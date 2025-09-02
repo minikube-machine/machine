@@ -9,10 +9,44 @@ import (
 	"runtime"
 	"strconv"
 	"time"
+
+	"github.com/docker/machine/libmachine/log"
 )
 
 type MultiError struct {
 	Errs []error
+}
+
+type GuestUtil struct {
+	os     string
+	vhdUrl string
+}
+
+// ConfigGuest is the package-level singleton for GuestUtil
+var ConfigGuest *GuestUtil
+
+func SetGuestUtil(guestOS, vhdUrl string) {
+	ConfigGuest = &GuestUtil{
+		os:     guestOS,
+		vhdUrl: vhdUrl,
+	}
+	log.Debugf("SetGuestUtil: os=%s, vhdUrl=%s", guestOS, vhdUrl)
+}
+
+func (g *GuestUtil) GetGuestOS() string {
+	if g == nil {
+		log.Debugf("GuestUtil is not initialized")
+		return "unknown"
+	}
+	return g.os
+}
+
+func (g *GuestUtil) GetVHDUrl() string {
+	if g == nil {
+		log.Debugf("GuestUtil is not initialized")
+		return ""
+	}
+	return g.vhdUrl
 }
 
 func (e MultiError) Error() string {
@@ -89,7 +123,7 @@ func WaitForSpecificOrError(f func() (bool, error), maxAttempts int, waitInterva
 		}
 		time.Sleep(waitInterval)
 	}
-	return fmt.Errorf("Maximum number of retries (%d) exceeded", maxAttempts)
+	return fmt.Errorf("maximum number of retries (%d) exceeded", maxAttempts)
 }
 
 func WaitForSpecific(f func() bool, maxAttempts int, waitInterval time.Duration) error {

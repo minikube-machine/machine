@@ -61,7 +61,7 @@ func hypervAvailable() error {
 	}
 
 	resp := parseLines(stdout)
-	if resp == nil || len(resp) == 0 || resp[0] != "Hyper-V" {
+	if len(resp) == 0 || resp[0] != "Hyper-V" {
 		return ErrNotInstalled
 	}
 
@@ -106,7 +106,7 @@ func isWindowsAdministrator() (bool, error) {
 }
 
 func quote(text string) string {
-	return fmt.Sprintf("'%s'", text)
+	return fmt.Sprintf(`"%s"`, text)
 }
 
 func toMb(value int) string {
