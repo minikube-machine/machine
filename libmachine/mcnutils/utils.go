@@ -17,26 +17,6 @@ type MultiError struct {
 	Errs []error
 }
 
-// var ConfigGuestOSUtil *GuestOSUtil
-
-// type GuestOSUtil struct {
-// 	os string
-// }
-
-// func SetGuestOSUtil(guestOS string) {
-// 	ConfigGuestOSUtil = &GuestOSUtil{
-// 		os: guestOS,
-// 	}
-// }
-
-// func (g *GuestOSUtil) GetGuestOS() string {
-// 	if g == nil {
-// 		log.Debugf("GuestOSUtil is not initialized")
-// 		return "unknown"
-// 	}
-// 	return g.os
-// }
-
 type GuestUtil struct {
 	os     string
 	vhdUrl string
