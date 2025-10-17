@@ -798,7 +798,7 @@ func (d *Driver) parseIPForMACFromIPAddr(ipAddrOutput string, macAddress string)
 			vals := strings.Split(line, " ")
 			if len(vals) >= 2 {
 				macBlock := vals[1]
-				macWithoutColons := strings.Replace(macBlock, ":", "", -1)
+				macWithoutColons := strings.ReplaceAll(macBlock, ":", "")
 				if macWithoutColons == macAddress { // we are in the correct device block
 					returnNextIP = true
 				}
@@ -1004,7 +1004,7 @@ func getAvailableTCPPort(port int) (int, error) {
 			return port, nil
 		}
 		port = 0 // Throw away the port hint before trying again
-		time.Sleep(1)
+		time.Sleep(1 * time.Second)
 	}
 	return 0, fmt.Errorf("unable to allocate tcp port")
 }

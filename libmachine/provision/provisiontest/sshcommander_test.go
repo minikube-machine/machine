@@ -23,6 +23,6 @@ func TestStatSSHCommand(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "sshcommandresponse", output)
 
-	output, err = sshCmder.SSHCommand("errorcommand")
+	_, err = sshCmder.SSHCommand("errorcommand")
 	assert.Error(t, err)
 }

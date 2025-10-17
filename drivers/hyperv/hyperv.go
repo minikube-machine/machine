@@ -3,6 +3,7 @@ package hyperv
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"strings"
@@ -488,7 +489,7 @@ func (d *Driver) generateDiskImage() (string, error) {
 	}
 	defer file.Close()
 
-	file.Seek(0, os.SEEK_SET)
+	file.Seek(0, io.SeekStart)
 	_, err = file.Write(tarBuf.Bytes())
 	if err != nil {
 		return "", err

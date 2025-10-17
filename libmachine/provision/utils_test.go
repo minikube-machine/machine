@@ -84,19 +84,19 @@ func TestGenerateDockerOptionsBoot2Docker(t *testing.T) {
 		t.Fatalf("expected engine path %s; received %s", engineConfigPath, dockerCfg.EngineOptionsPath)
 	}
 
-	if strings.Index(dockerCfg.EngineOptions, fmt.Sprintf("-H tcp://0.0.0.0:%d", dockerPort)) == -1 {
+	if !strings.Contains(dockerCfg.EngineOptions, fmt.Sprintf("-H tcp://0.0.0.0:%d", dockerPort)) {
 		t.Fatalf("-H docker port invalid; expected %d", dockerPort)
 	}
 
-	if strings.Index(dockerCfg.EngineOptions, fmt.Sprintf("CACERT=%s", p.AuthOptions.CaCertRemotePath)) == -1 {
+	if !strings.Contains(dockerCfg.EngineOptions, fmt.Sprintf("CACERT=%s", p.AuthOptions.CaCertRemotePath)) {
 		t.Fatalf("CACERT option invalid; expected %s", p.AuthOptions.CaCertRemotePath)
 	}
 
-	if strings.Index(dockerCfg.EngineOptions, fmt.Sprintf("SERVERKEY=%s", p.AuthOptions.ServerKeyRemotePath)) == -1 {
+	if !strings.Contains(dockerCfg.EngineOptions, fmt.Sprintf("SERVERKEY=%s", p.AuthOptions.ServerKeyRemotePath)) {
 		t.Fatalf("SERVERKEY option invalid; expected %s", p.AuthOptions.ServerKeyRemotePath)
 	}
 
-	if strings.Index(dockerCfg.EngineOptions, fmt.Sprintf("SERVERCERT=%s", p.AuthOptions.ServerCertRemotePath)) == -1 {
+	if !strings.Contains(dockerCfg.EngineOptions, fmt.Sprintf("SERVERCERT=%s", p.AuthOptions.ServerCertRemotePath)) {
 		t.Fatalf("SERVERCERT option invalid; expected %s", p.AuthOptions.ServerCertRemotePath)
 	}
 }
@@ -126,8 +126,8 @@ func TestMachinePortBoot2Docker(t *testing.T) {
 	b := m[0]
 	u := strings.Split(b, " ")
 	url := u[1]
-	url = strings.Replace(url, "'", "", -1)
-	url = strings.Replace(url, "\\\"", "", -1)
+	url = strings.ReplaceAll(url, "'", "")
+	url = strings.ReplaceAll(url, "\\\"", "")
 	if url != bindURL {
 		t.Errorf("expected url %s; received %s", bindURL, url)
 	}
@@ -159,8 +159,8 @@ func TestMachineCustomPortBoot2Docker(t *testing.T) {
 	b := m[0]
 	u := strings.Split(b, " ")
 	url := u[1]
-	url = strings.Replace(url, "'", "", -1)
-	url = strings.Replace(url, "\\\"", "", -1)
+	url = strings.ReplaceAll(url, "'", "")
+	url = strings.ReplaceAll(url, "\\\"", "")
 	if url != bindURL {
 		t.Errorf("expected url %s; received %s", bindURL, url)
 	}

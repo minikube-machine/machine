@@ -254,6 +254,7 @@ func TestCopyDefaultISOToMachine(t *testing.T) {
 	for _, tt := range testCases {
 		if tt.create {
 			isopath, _, err = newDummyISO("cache", defaultISOFilename, tt.localVer)
+			assert.NoError(t, err)
 		} else {
 			if dir, e := ioutil.TempDir("", "machine-test"); e == nil {
 				isopath = filepath.Join(dir, "cache", defaultISOFilename)
@@ -320,7 +321,7 @@ func newDummyISO(dir, name, version string) (string, int64, error) {
 	}
 
 	tmpDir = filepath.Join(tmpDir, dir)
-	if e := os.MkdirAll(tmpDir, 755); e != nil {
+	if e := os.MkdirAll(tmpDir, 0755); e != nil {
 		return "", 0, err
 	}
 

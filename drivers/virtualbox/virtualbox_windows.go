@@ -61,7 +61,7 @@ func findVBoxInstallDirInRegistry() (string, error) {
 	if err != nil {
 		errorMessage := fmt.Sprintf("Can't find VirtualBox registry entries, is VirtualBox really installed properly? %s", err)
 		log.Debugf(errorMessage)
-		return "", fmt.Errorf(errorMessage)
+		return "", fmt.Errorf("%s", errorMessage)
 	}
 
 	defer registryKey.Close()
@@ -70,7 +70,7 @@ func findVBoxInstallDirInRegistry() (string, error) {
 	if err != nil {
 		errorMessage := fmt.Sprintf("Can't find InstallDir registry key within VirtualBox registries entries, is VirtualBox really installed properly? %s", err)
 		log.Debugf(errorMessage)
-		return "", fmt.Errorf(errorMessage)
+		return "", fmt.Errorf("%s", errorMessage)
 	}
 
 	return installDir, nil
