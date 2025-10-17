@@ -13,8 +13,8 @@ import (
 	"os"
 	"runtime"
 
-	gossh "golang.org/x/crypto/ssh"
 	"github.com/hectane/go-acl"
+	gossh "golang.org/x/crypto/ssh"
 )
 
 var (
@@ -135,4 +135,3 @@ func windowsChmod(filePath string, fileMode os.FileMode) error {
 	}
 	return nil
 }
-
