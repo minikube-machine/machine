@@ -471,14 +471,6 @@ func (v *MockCreateOperations) Addrs(iface *net.Interface) ([]net.Addr, error) {
 	return []net.Addr{}, err
 }
 
-func (v *MockCreateOperations) expectCall(callSignature, output string, err error) {
-	v.expectedCalls = append(v.expectedCalls, Call{
-		signature: callSignature,
-		output:    output,
-		err:       err,
-	})
-}
-
 func (v *MockCreateOperations) doCall(callSignature string) (string, error) {
 	if v.call >= len(v.expectedCalls) {
 		v.test.Fatal("Unexpected call", callSignature)
