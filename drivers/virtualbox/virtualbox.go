@@ -315,6 +315,35 @@ func (d *Driver) Create() error {
 	return d.Start()
 }
 
+func importBoot2Docker(d *Driver, name string) error {
+	// make sure vm is stopped
+	_ = d.vbm("controlvm", name, "poweroff")
+
+	diskInfo, err := getVMDiskInfo(name, d.VBoxManager)
+	if err != nil {
+		return err
+	}
+
+	if _, err := os.Stat(diskInfo.Path); err != nil {
+		return err
+	}
+
+	if err := d.vbm("clonehd", diskInfo.Path, d.diskPath()); err != nil {
+		return err
+	}
+
+	log.Debugf("Importing VM settings...")
+	vmInfo, err := getVMInfo(name, d.VBoxManager)
+	if err != nil {
+		return err
+	}
+
+	d.CPU = vmInfo.CPUs
+	d.Memory = vmInfo.Memory
+
+	return nil
+}
+
 func (d *Driver) CreateVM() error {
 	if err := d.b2dUpdater.CopyIsoToMachineDir(d.StorePath, d.MachineName, d.Boot2DockerURL); err != nil {
 		return err
@@ -326,30 +355,9 @@ func (d *Driver) CreateVM() error {
 	if d.Boot2DockerImportVM != "" {
 		name := d.Boot2DockerImportVM
 
-		// make sure vm is stopped
-		_ = d.vbm("controlvm", name, "poweroff")
-
-		diskInfo, err := getVMDiskInfo(name, d.VBoxManager)
-		if err != nil {
+		if err := importBoot2Docker(d, name); err != nil {
 			return err
 		}
-
-		if _, err := os.Stat(diskInfo.Path); err != nil {
-			return err
-		}
-
-		if err := d.vbm("clonehd", diskInfo.Path, d.diskPath()); err != nil {
-			return err
-		}
-
-		log.Debugf("Importing VM settings...")
-		vmInfo, err := getVMInfo(name, d.VBoxManager)
-		if err != nil {
-			return err
-		}
-
-		d.CPU = vmInfo.CPUs
-		d.Memory = vmInfo.Memory
 
 		log.Debugf("Importing SSH key...")
 		keyPath := filepath.Join(mcnutils.GetHomeDir(), ".ssh", "id_boot2docker")
@@ -487,26 +495,8 @@ func (d *Driver) CreateVM() error {
 	}
 
 	if shareDir != "" && !d.NoShare {
-		log.Debugf("setting up shareDir '%s' -> '%s'", shareDir, shareName)
-		if _, err := os.Stat(shareDir); err != nil && !os.IsNotExist(err) {
+		if err := setupShareDir(d, shareDir, shareName); err != nil {
 			return err
-		} else if !os.IsNotExist(err) {
-			if shareName == "" {
-				// parts of the VBox internal code are buggy with share names that start with "/"
-				shareName = strings.TrimLeft(shareDir, "/")
-				// TODO do some basic Windows -> MSYS path conversion
-				// ie, s!^([a-z]+):[/\\]+!\1/!; s!\\!/!g
-			}
-
-			// woo, shareDir exists!  let's carry on!
-			if err := d.vbm("sharedfolder", "add", d.MachineName, "--name", shareName, "--hostpath", shareDir, "--automount"); err != nil {
-				return err
-			}
-
-			// enable symlinks
-			if err := d.vbm("setextradata", d.MachineName, "VBoxInternal2/SharedFoldersEnableSymlinksCreate/"+shareName, "1"); err != nil {
-				return err
-			}
 		}
 	}
 
@@ -518,6 +508,32 @@ func parseShareFolder(shareFolder string) (string, string) {
 	shareDir := strings.Join(split[:len(split)-1], ":")
 	shareName := split[len(split)-1]
 	return shareDir, shareName
+}
+
+func setupShareDir(d *Driver, shareDir, shareName string) error {
+	log.Debugf("setting up shareDir '%s' -> '%s'", shareDir, shareName)
+	if _, err := os.Stat(shareDir); err != nil && !os.IsNotExist(err) {
+		return err
+	} else if !os.IsNotExist(err) {
+		if shareName == "" {
+			// parts of the VBox internal code are buggy with share names that start with "/"
+			shareName = strings.TrimLeft(shareDir, "/")
+			// TODO do some basic Windows -> MSYS path conversion
+			// ie, s!^([a-z]+):[/\\]+!\1/!; s!\\!/!g
+		}
+
+		// woo, shareDir exists!  let's carry on!
+		if err := d.vbm("sharedfolder", "add", d.MachineName, "--name", shareName, "--hostpath", shareDir, "--automount"); err != nil {
+			return err
+		}
+
+		// enable symlinks
+		if err := d.vbm("setextradata", d.MachineName, "VBoxInternal2/SharedFoldersEnableSymlinksCreate/"+shareName, "1"); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (d *Driver) hostOnlyIPAvailable() bool {
