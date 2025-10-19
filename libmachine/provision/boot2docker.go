@@ -64,7 +64,10 @@ func (provisioner *Boot2DockerProvisioner) upgradeIso() error {
 	var d struct {
 		Boot2DockerURL string
 	}
-	json.Unmarshal(jsonDriver, &d)
+	err = json.Unmarshal(jsonDriver, &d)
+	if err != nil {
+		return err
+	}
 
 	log.Info("Stopping machine to do the upgrade...")
 
@@ -169,7 +172,10 @@ SERVERCERT={{.AuthOptions.ServerCertRemotePath}}
 		EngineOptions: provisioner.EngineOptions,
 	}
 
-	t.Execute(&engineCfg, engineConfigContext)
+	err = t.Execute(&engineCfg, engineConfigContext)
+	if err != nil {
+		return nil, err
+	}
 
 	daemonOptsDir := path.Join(provisioner.GetDockerOptionsDir(), "profile")
 	return &DockerOptions{

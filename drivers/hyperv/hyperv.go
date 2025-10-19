@@ -489,7 +489,10 @@ func (d *Driver) generateDiskImage() (string, error) {
 	}
 	defer file.Close()
 
-	file.Seek(0, io.SeekStart)
+	_, err = file.Seek(0, io.SeekStart)
+	if err != nil {
+		return "", err
+	}
 	_, err = file.Write(tarBuf.Bytes())
 	if err != nil {
 		return "", err

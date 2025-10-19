@@ -200,7 +200,10 @@ func (provisioner *RedHatProvisioner) GenerateDockerOptions(dockerPort int) (*Do
 		DockerOptionsDir: provisioner.DockerOptionsDir,
 	}
 
-	t.Execute(&engineCfg, engineConfigContext)
+	err = t.Execute(&engineCfg, engineConfigContext)
+	if err != nil {
+		return nil, err
+	}
 
 	daemonOptsDir := configPath
 	return &DockerOptions{

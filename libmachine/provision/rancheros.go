@@ -169,7 +169,7 @@ func (provisioner *RancherProvisioner) upgrade() error {
 
 		log.Infof("Upgrade succeeded, rebooting")
 		// ignore errors here because the SSH connection will close
-		provisioner.SSHCommand("sudo reboot")
+		_, _ = provisioner.SSHCommand("sudo reboot")
 
 		return nil
 	}

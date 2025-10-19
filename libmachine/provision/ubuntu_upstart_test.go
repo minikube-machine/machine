@@ -37,7 +37,7 @@ func TestUbuntuCompatibleWithHost(t *testing.T) {
 func TestUbuntuDefaultStorageDriver(t *testing.T) {
 	p := NewUbuntuProvisioner(&fakedriver.Driver{}).(*UbuntuProvisioner)
 	p.SSHCommander = provisiontest.NewFakeSSHCommander(provisiontest.FakeSSHCommanderOptions{})
-	p.Provision(swarm.Options{}, auth.Options{}, engine.Options{})
+	_ = p.Provision(swarm.Options{}, auth.Options{}, engine.Options{})
 	if p.EngineOptions.StorageDriver != "overlay2" {
 		t.Fatal("Default storage driver should be overlay2")
 	}

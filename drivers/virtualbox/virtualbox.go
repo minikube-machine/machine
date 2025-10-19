@@ -1020,7 +1020,7 @@ func setPortForwarding(d *Driver, interfaceNum int, mapName, protocol string, gu
 			guestPort, mapName, desiredHostPort, actualHostPort)
 	}
 	cmd := fmt.Sprintf("--natpf%d", interfaceNum)
-	d.vbm("modifyvm", d.MachineName, cmd, "delete", mapName)
+	_ = d.vbm("modifyvm", d.MachineName, cmd, "delete", mapName)
 	if err := d.vbm("modifyvm", d.MachineName,
 		cmd, fmt.Sprintf("%s,%s,127.0.0.1,%d,,%d", mapName, protocol, actualHostPort, guestPort)); err != nil {
 		return -1, err

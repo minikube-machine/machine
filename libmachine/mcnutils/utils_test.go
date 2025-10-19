@@ -20,7 +20,10 @@ func TestCopyFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	srcFile.Write([]byte(testStr))
+	_, err = srcFile.Write([]byte(testStr))
+	if err != nil {
+		t.Fatal(err)
+	}
 	srcFile.Close()
 
 	srcFilePath := filepath.Join(os.TempDir(), srcFi.Name())

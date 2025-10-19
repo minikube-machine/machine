@@ -297,7 +297,7 @@ func (client *NativeClient) Shell(args ...string) error {
 			return err
 		}
 
-		defer term.RestoreTerminal(fd, oldState)
+		defer func() { _ = term.RestoreTerminal(fd, oldState) }()
 
 		winsize, err := term.GetWinsize(fd)
 		if err != nil {

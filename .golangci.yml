@@ -5,6 +5,3 @@ linters:
     - goimports
     - govet
     - gocyclo
-  disable:
-    # TODO: enable errcheck again
-    - errcheck

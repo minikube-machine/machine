@@ -33,8 +33,12 @@ Please use this plugin through the main 'docker-machine' binary.
 	os.Setenv("MACHINE_DEBUG", "1")
 
 	rpcd := rpcdriver.NewRPCServerDriver(d)
-	rpc.RegisterName(rpcdriver.RPCServiceNameV0, rpcd)
-	rpc.RegisterName(rpcdriver.RPCServiceNameV1, rpcd)
+	if err := rpc.RegisterName(rpcdriver.RPCServiceNameV0, rpcd); err != nil {
+		fmt.Fprintf(os.Stderr, "Error registering RPC name: %s\n", err)
+	}
+	if err := rpc.RegisterName(rpcdriver.RPCServiceNameV1, rpcd); err != nil {
+		fmt.Fprintf(os.Stderr, "Error registering RPC name: %s\n", err)
+	}
 	rpc.HandleHTTP()
 
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
@@ -46,18 +50,21 @@ Please use this plugin through the main 'docker-machine' binary.
 
 	fmt.Println(listener.Addr())
 
-	go http.Serve(listener, nil)
-
-	for {
-		select {
-		case <-rpcd.CloseCh:
-			log.Debug("Closing plugin on server side")
-			os.Exit(0)
-		case <-rpcd.HeartbeatCh:
-			continue
-		case <-time.After(heartbeatTimeout):
-			// TODO: Add heartbeat retry logic
-			os.Exit(1)
+	go func() {
+		for {
+			select {
+			case <-rpcd.CloseCh:
+				log.Debug("Closing plugin on server side")
+				os.Exit(0)
+			case <-rpcd.HeartbeatCh:
+				continue
+			case <-time.After(heartbeatTimeout):
+				// TODO: Add heartbeat retry logic
+				os.Exit(1)
+			}
 		}
-	}
+	}()
+
+	// http.Serve never returns
+	_ = http.Serve(listener, nil)
 }

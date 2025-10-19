@@ -125,7 +125,10 @@ DOCKER_OPTS='
 		EngineOptions: provisioner.EngineOptions,
 	}
 
-	t.Execute(&engineCfg, engineConfigContext)
+	err = t.Execute(&engineCfg, engineConfigContext)
+	if err != nil {
+		return nil, err
+	}
 
 	return &DockerOptions{
 		EngineOptions:     engineCfg.String(),

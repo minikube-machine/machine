@@ -63,7 +63,7 @@ func (n *hostOnlyNetwork) Save(vbox VBoxManager) error {
 	}
 
 	if n.DHCP {
-		vbox.vbm("hostonlyif", "ipconfig", n.Name, "--dhcp") // not implemented as of VirtualBox 4.3
+		_ = vbox.vbm("hostonlyif", "ipconfig", n.Name, "--dhcp") // not implemented as of VirtualBox 4.3
 	}
 
 	return nil

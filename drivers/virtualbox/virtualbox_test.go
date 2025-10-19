@@ -458,7 +458,10 @@ func (v *MockCreateOperations) RandomInt(n int) int {
 }
 
 func (v *MockCreateOperations) Sleep(d time.Duration) {
-	v.doCall("Sleep " + fmt.Sprintf("%v", d))
+	_, err := v.doCall("Sleep " + fmt.Sprintf("%v", d))
+	if err != nil {
+		v.test.Fatal(err)
+	}
 }
 
 func (v *MockCreateOperations) Interfaces() ([]net.Interface, error) {

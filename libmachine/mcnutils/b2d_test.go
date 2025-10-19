@@ -92,7 +92,7 @@ func TestVersion(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, vers, string(got))
-		removeFileIfExists(isopath)
+		_ = removeFileIfExists(isopath)
 	}
 }
 
@@ -163,16 +163,20 @@ func TestReaderWithProgress(t *testing.T) {
 		expectedLength: 100,
 	}
 
-	readerWithProgress.Read(buffer)
+	_, err := readerWithProgress.Read(buffer)
+	assert.NoError(t, err)
 	assert.Equal(t, "0%..", output.String())
 
-	readerWithProgress.Read(buffer)
+	_, err = readerWithProgress.Read(buffer)
+	assert.NoError(t, err)
 	assert.Equal(t, "0%....10%....20%....30%....40%....50%", output.String())
 
-	readerWithProgress.Read(buffer)
+	_, err = readerWithProgress.Read(buffer)
+	assert.NoError(t, err)
 	assert.Equal(t, "0%....10%....20%....30%....40%....50%....60%....70%....80%....90%....100%", output.String())
 
-	readerWithProgress.Close()
+	err = readerWithProgress.Close()
+	assert.NoError(t, err)
 	assert.Equal(t, "0%....10%....20%....30%....40%....50%....60%....70%....80%....90%....100%\n", output.String())
 }
 
@@ -308,7 +312,7 @@ func TestCopyDefaultISOToMachine(t *testing.T) {
 // newTestServer creates a new httptest.Server that returns respText as a response body.
 func newTestServer(respText string) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(respText))
+		_, _ = w.Write([]byte(respText))
 	}))
 }
 
