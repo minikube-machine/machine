@@ -129,8 +129,5 @@ func GenerateSSHKey(path string) error {
 
 // change windows acl based permissions on file
 func windowsChmod(filePath string, fileMode os.FileMode) error {
-	if err := acl.Chmod(filePath, fileMode); err != nil {
-		return err
-	}
-	return nil
+	return acl.Chmod(filePath, fileMode)
 }

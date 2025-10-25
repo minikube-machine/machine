@@ -2,6 +2,7 @@ package provision
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -237,7 +238,7 @@ func (provisioner *RancherProvisioner) getLatestISOURL() (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("Failed to find current version")
+	return "", errors.New("Failed to find current version")
 }
 
 func selectDocker(p Provisioner, baseURL string) error {

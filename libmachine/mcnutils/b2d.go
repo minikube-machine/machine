@@ -107,7 +107,7 @@ func (*b2dReleaseGetter) getReleaseTag(apiURL string) (string, error) {
 		// are a non-release candidate version.  "/latest" won't return
 		// non-RCs, so that's what we use for stable releases of
 		// Machine.
-		apiURL = apiURL + "/latest"
+		apiURL += "/latest"
 	}
 
 	client := getClient()
@@ -188,8 +188,8 @@ See here for more details: %s
 Consider specifying another storage driver (e.g. 'overlay') using '--engine-storage-driver' instead.
 `, tag, bugURL)
 	}
-	url := fmt.Sprintf("%s://%s/%s/%s/releases/download/%s/%s", scheme, host, org, repo, tag, b.isoFilename)
-	return url, nil
+	u := fmt.Sprintf("%s://%s/%s/%s/releases/download/%s/%s", scheme, host, org, repo, tag, b.isoFilename)
+	return u, nil
 }
 
 func (*b2dReleaseGetter) download(dir, file, isoURL string) error {
@@ -529,7 +529,7 @@ func MakeDiskImage(publicSSHKeyPath string) (*bytes.Buffer, error) {
 		return nil, err
 	}
 
-	if _, err := tw.Write([]byte(pubKey)); err != nil {
+	if _, err := tw.Write(pubKey); err != nil {
 		return nil, err
 	}
 
@@ -538,7 +538,7 @@ func MakeDiskImage(publicSSHKeyPath string) (*bytes.Buffer, error) {
 		return nil, err
 	}
 
-	if _, err := tw.Write([]byte(pubKey)); err != nil {
+	if _, err := tw.Write(pubKey); err != nil {
 		return nil, err
 	}
 

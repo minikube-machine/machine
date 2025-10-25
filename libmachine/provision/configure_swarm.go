@@ -75,7 +75,7 @@ func configureSwarm(p Provisioner, swarmOptions swarm.Options, authOptions auth.
 			cmdMaster = append(cmdMaster, "--"+option)
 		}
 
-		//Discovery must be at end of command
+		// Discovery must be at end of command
 		cmdMaster = append(cmdMaster, swarmOptions.Discovery)
 
 		hostBind := fmt.Sprintf("%s:%s", dockerDir, dockerDir)

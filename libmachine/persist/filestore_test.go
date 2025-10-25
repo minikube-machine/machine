@@ -56,10 +56,7 @@ func TestStoreSave(t *testing.T) {
 
 	files, _ := ioutil.ReadDir(path)
 	for _, f := range files {
-		r, err := regexp.Compile("config.json.tmp*")
-		if err != nil {
-			t.Fatalf("Failed to compile regexp string")
-		}
+		r := regexp.MustCompile("config.json.tmp*")
 		if r.MatchString(f.Name()) {
 			t.Fatalf("Failed to remove temp filestore:%s", f.Name())
 		}

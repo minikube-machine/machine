@@ -91,7 +91,7 @@ func TestVersion(t *testing.T) {
 		got, err := b.version()
 
 		assert.NoError(t, err)
-		assert.Equal(t, vers, string(got))
+		assert.Equal(t, vers, got)
 		_ = removeFileIfExists(isopath)
 	}
 }

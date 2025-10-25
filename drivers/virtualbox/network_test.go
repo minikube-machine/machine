@@ -331,16 +331,14 @@ func TestCheckIPNetCollisionIPv6(t *testing.T) {
 	assert.Nil(t, err)
 	m[hostIP.String()] = &net.IPNet{IP: hostIP, Mask: hostNet.Mask}
 
-	result, err := checkIPNetCollision(vboxHostOnly, m)
-	assert.Nil(t, err)
+	result := checkIPNetCollision(vboxHostOnly, m)
 	assert.False(t, result)
 
 	hostIP, hostNet, err = net.ParseCIDR("2607:f8b0:400e:c04::6a/64")
 	assert.Nil(t, err)
 	m[hostIP.String()] = &net.IPNet{IP: hostIP, Mask: hostNet.Mask}
 
-	result, err = checkIPNetCollision(vboxHostOnly, m)
-	assert.Nil(t, err)
+	result = checkIPNetCollision(vboxHostOnly, m)
 	assert.True(t, result)
 }
 
@@ -354,16 +352,14 @@ func TestCheckIPNetCollisionIPv4(t *testing.T) {
 	assert.NoError(t, err)
 	m[hostIP.String()] = &net.IPNet{IP: hostIP, Mask: hostNet.Mask}
 
-	result, err := checkIPNetCollision(vboxHostOnly, m)
-	assert.NoError(t, err)
+	result := checkIPNetCollision(vboxHostOnly, m)
 	assert.False(t, result)
 
 	hostIP, hostNet, err = net.ParseCIDR("192.168.99.22/24")
 	assert.NoError(t, err)
 	m[hostIP.String()] = &net.IPNet{IP: hostIP, Mask: hostNet.Mask}
 
-	result, err = checkIPNetCollision(vboxHostOnly, m)
-	assert.NoError(t, err)
+	result = checkIPNetCollision(vboxHostOnly, m)
 	assert.True(t, result)
 }
 

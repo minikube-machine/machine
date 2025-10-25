@@ -49,8 +49,7 @@ func (provisioner *DebianProvisioner) Package(name string, action pkgaction.Pack
 		updateMetadata = false
 	}
 
-	switch name {
-	case "docker":
+	if name == "docker" {
 		name = "docker-engine"
 	}
 

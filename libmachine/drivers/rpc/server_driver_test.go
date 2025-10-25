@@ -1,4 +1,4 @@
-package rpcdriver
+package rpc
 
 import (
 	"errors"

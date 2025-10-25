@@ -1,4 +1,4 @@
-package rpcdriver
+package rpc
 
 import (
 	"fmt"
@@ -20,30 +20,30 @@ var (
 	heartbeatInterval = 5 * time.Second
 )
 
-type RPCClientDriverFactory interface {
+type RPCClientDriverFactory interface { //nolint:revive
 	NewRPCClientDriver(driverName string, rawDriver []byte) (*RPCClientDriver, error)
 	io.Closer
 }
 
-type DefaultRPCClientDriverFactory struct {
+type DefaultRPCClientDriverFactory struct { //nolint:revive
 	openedDrivers     []*RPCClientDriver
 	openedDriversLock sync.Locker
 }
 
-func NewRPCClientDriverFactory() RPCClientDriverFactory {
+func NewRPCClientDriverFactory() RPCClientDriverFactory { //nolint:revive
 	return &DefaultRPCClientDriverFactory{
 		openedDrivers:     []*RPCClientDriver{},
 		openedDriversLock: &sync.Mutex{},
 	}
 }
 
-type RPCClientDriver struct {
+type RPCClientDriver struct { //nolint:revive
 	plugin          localbinary.DriverPlugin
 	heartbeatDoneCh chan bool
 	Client          *InternalClient
 }
 
-type RPCCall struct {
+type RPCCall struct { //nolint:revive
 	ServiceMethod string
 	Args          interface{}
 	Reply         interface{}

@@ -39,25 +39,25 @@ func (v *VBoxManagerMock) vbmOutErr(args ...string) (string, string, error) {
 	return "", "", errors.New("Invalid args")
 }
 
-func newTestDriver(name string) *Driver {
-	return NewDriver(name, "")
+func newTestDriver() *Driver {
+	return NewDriver("default", "")
 }
 
 func TestDriverName(t *testing.T) {
-	driverName := newTestDriver("default").DriverName()
+	driverName := newTestDriver().DriverName()
 
 	assert.Equal(t, "virtualbox", driverName)
 }
 
 func TestSSHHostname(t *testing.T) {
-	hostname, err := newTestDriver("default").GetSSHHostname()
+	hostname, err := newTestDriver().GetSSHHostname()
 
 	assert.Equal(t, "127.0.0.1", hostname)
 	assert.NoError(t, err)
 }
 
 func TestDefaultSSHUsername(t *testing.T) {
-	username := newTestDriver("default").GetSSHUsername()
+	username := newTestDriver().GetSSHUsername()
 
 	assert.Equal(t, "docker", username)
 }
@@ -96,7 +96,7 @@ func TestState(t *testing.T) {
 	}
 
 	for _, expected := range tests {
-		driver := newTestDriver("default")
+		driver := newTestDriver()
 		driver.VBoxManager = &VBoxManagerMock{
 			args:   "showvminfo default --machinereadable",
 			stdOut: expected.stdOut,
@@ -120,7 +120,7 @@ func TestStateErrors(t *testing.T) {
 	}
 
 	for _, expected := range tests {
-		driver := newTestDriver("default")
+		driver := newTestDriver()
 		driver.VBoxManager = &VBoxManagerMock{
 			args:   "showvminfo default --machinereadable",
 			stdErr: expected.stdErr,
@@ -135,7 +135,7 @@ func TestStateErrors(t *testing.T) {
 }
 
 func TestGetRandomIPinSubnet(t *testing.T) {
-	driver := newTestDriver("default")
+	driver := newTestDriver()
 
 	// test IP 1.2.3.4
 	testIP := net.IPv4(byte(1), byte(2), byte(3), byte(4))
@@ -162,7 +162,7 @@ func TestGetRandomIPinSubnet(t *testing.T) {
 }
 
 func TestGetHostOnlyMACAddress(t *testing.T) {
-	driver := newTestDriver("default")
+	driver := newTestDriver()
 	driver.VBoxManager = &VBoxManagerMock{
 		args:   "showvminfo default --machinereadable",
 		stdOut: "unrelatedfield=whatever\nhostonlyadapter2=\"vboxnet1\"\nmacaddress2=\"004488AABBCC\"\n",
@@ -175,7 +175,7 @@ func TestGetHostOnlyMACAddress(t *testing.T) {
 }
 
 func TestGetHostOnlyMACAddressWhenNoHostOnlyAdapter(t *testing.T) {
-	driver := newTestDriver("default")
+	driver := newTestDriver()
 	driver.VBoxManager = &VBoxManagerMock{
 		args:   "showvminfo default --machinereadable",
 		stdOut: "unrelatedfield=whatever\n",
@@ -187,7 +187,7 @@ func TestGetHostOnlyMACAddressWhenNoHostOnlyAdapter(t *testing.T) {
 }
 
 func TestParseIPForMACFromIPAddr(t *testing.T) {
-	driver := newTestDriver("default")
+	driver := newTestDriver()
 
 	ipAddrOutput := "1: eth0:\n    link/ether 00:44:88:aa:bb:cc\n    inet 1.2.3.4/24\n2: eth1:\n    link/ether 11:55:99:dd:ee:ff\n   inet 5.6.7.8/24"
 
@@ -215,7 +215,7 @@ func TestGetIPErrors(t *testing.T) {
 	}
 
 	for _, expected := range tests {
-		driver := newTestDriver("default")
+		driver := newTestDriver()
 		driver.VBoxManager = &VBoxManagerMock{
 			args:   "showvminfo default --machinereadable",
 			stdOut: expected.stdOut,
@@ -383,7 +383,7 @@ func TestGetDHCPAddressRange(t *testing.T) {
 }
 
 func TestSetConfigFromFlags(t *testing.T) {
-	driver := newTestDriver("default")
+	driver := newTestDriver()
 
 	checkFlags := &drivers.CheckDriverOptions{
 		FlagsValues: map[string]interface{}{},

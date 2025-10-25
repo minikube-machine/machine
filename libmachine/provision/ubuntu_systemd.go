@@ -65,8 +65,7 @@ func (provisioner *UbuntuSystemdProvisioner) Package(name string, action pkgacti
 		updateMetadata = false
 	}
 
-	switch name {
-	case "docker":
+	if name == "docker" {
 		name = "docker-ce"
 	}
 

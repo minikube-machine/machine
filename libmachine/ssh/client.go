@@ -164,7 +164,7 @@ func (client *NativeClient) dialSuccess() bool {
 	return true
 }
 
-func (client *NativeClient) session(command string) (*ssh.Client, *ssh.Session, error) {
+func (client *NativeClient) session() (*ssh.Client, *ssh.Session, error) {
 	if err := mcnutils.WaitFor(client.dialSuccess); err != nil {
 		return nil, nil, fmt.Errorf("Error attempting SSH client dial: %s", err)
 	}
@@ -179,7 +179,7 @@ func (client *NativeClient) session(command string) (*ssh.Client, *ssh.Session, 
 }
 
 func (client *NativeClient) Output(command string) (string, error) {
-	conn, session, err := client.session(command)
+	conn, session, err := client.session()
 	if err != nil {
 		return "", nil
 	}
@@ -192,7 +192,7 @@ func (client *NativeClient) Output(command string) (string, error) {
 }
 
 func (client *NativeClient) OutputWithPty(command string) (string, error) {
-	conn, session, err := client.session(command)
+	conn, session, err := client.session()
 	if err != nil {
 		return "", nil
 	}
@@ -224,7 +224,7 @@ func (client *NativeClient) OutputWithPty(command string) (string, error) {
 }
 
 func (client *NativeClient) Start(command string) (io.ReadCloser, io.ReadCloser, error) {
-	conn, session, err := client.session(command)
+	conn, session, err := client.session()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -333,7 +333,8 @@ func NewExternalClient(sshBinaryPath, user, host string, port int, auth *Auth) (
 		BinaryPath: sshBinaryPath,
 	}
 
-	args := append(baseSSHArgs, fmt.Sprintf("%s@%s", user, host))
+	args := baseSSHArgs
+	args = append(args, fmt.Sprintf("%s@%s", user, host))
 
 	// If no identities are explicitly provided, also look at the identities
 	// offered by ssh-agent
@@ -379,7 +380,8 @@ func getSSHCmd(binaryPath string, args ...string) *exec.Cmd {
 }
 
 func (client *ExternalClient) Output(command string) (string, error) {
-	args := append(client.BaseArgs, command)
+	args := client.BaseArgs
+	args = append(args, command)
 	cmd := getSSHCmd(client.BinaryPath, args...)
 	output, err := cmd.CombinedOutput()
 	return string(output), err
@@ -399,7 +401,8 @@ func (client *ExternalClient) Shell(args ...string) error {
 }
 
 func (client *ExternalClient) Start(command string) (io.ReadCloser, io.ReadCloser, error) {
-	args := append(client.BaseArgs, command)
+	args := client.BaseArgs
+	args = append(args, command)
 	cmd := getSSHCmd(client.BinaryPath, args...)
 
 	log.Debug(cmd)

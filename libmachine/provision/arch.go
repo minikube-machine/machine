@@ -59,10 +59,10 @@ func (provisioner *ArchProvisioner) Package(name string, action pkgaction.Packag
 
 	pacmanOpts := "-" + packageAction
 	if updateMetadata {
-		pacmanOpts = pacmanOpts + "y"
+		pacmanOpts += "y"
 	}
 
-	pacmanOpts = pacmanOpts + " --noconfirm --noprogressbar"
+	pacmanOpts += " --noconfirm --noprogressbar"
 
 	command := fmt.Sprintf("sudo -E pacman %s %s", pacmanOpts, name)
 

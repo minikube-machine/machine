@@ -140,7 +140,7 @@ func parseVersion(version string) (int, int, error) {
 	return major, minor, err
 }
 
-func parseKeyValues(stdOut string, regexp *regexp.Regexp, callback func(key, val string) error) error {
+func parseKeyValues(stdOut string, re *regexp.Regexp, callback func(key, val string) error) error {
 	r := strings.NewReader(stdOut)
 	s := bufio.NewScanner(r)
 
@@ -150,7 +150,7 @@ func parseKeyValues(stdOut string, regexp *regexp.Regexp, callback func(key, val
 			continue
 		}
 
-		res := regexp.FindStringSubmatch(line)
+		res := re.FindStringSubmatch(line)
 		if res == nil {
 			continue
 		}

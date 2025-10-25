@@ -12,7 +12,7 @@ import (
 	"github.com/docker/machine/libmachine/check"
 	"github.com/docker/machine/libmachine/drivers"
 	"github.com/docker/machine/libmachine/drivers/plugin/localbinary"
-	rpcdriver "github.com/docker/machine/libmachine/drivers/rpc"
+	"github.com/docker/machine/libmachine/drivers/rpc"
 	"github.com/docker/machine/libmachine/engine"
 	"github.com/docker/machine/libmachine/host"
 	"github.com/docker/machine/libmachine/log"
@@ -40,7 +40,7 @@ type Client struct {
 	SSHClientType  ssh.ClientType
 	GithubAPIToken string
 	*persist.Filestore
-	clientDriverFactory rpcdriver.RPCClientDriverFactory
+	clientDriverFactory rpc.RPCClientDriverFactory
 }
 
 func NewClient(storePath, certsDir string) *Client {
@@ -49,7 +49,7 @@ func NewClient(storePath, certsDir string) *Client {
 		IsDebug:             false,
 		SSHClientType:       ssh.External,
 		Filestore:           persist.NewFilestore(storePath, certsDir, certsDir),
-		clientDriverFactory: rpcdriver.NewRPCClientDriverFactory(),
+		clientDriverFactory: rpc.NewRPCClientDriverFactory(),
 	}
 }
 

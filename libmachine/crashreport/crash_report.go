@@ -129,9 +129,9 @@ func addFile(path string, metaData *bugsnag.MetaData) {
 }
 
 func detectRunningShell(metaData *bugsnag.MetaData) {
-	shell, err := shell.Detect()
+	sh, err := shell.Detect()
 	if err == nil {
-		metaData.Add("device", "shell", shell)
+		metaData.Add("device", "shell", sh)
 	}
 }
 

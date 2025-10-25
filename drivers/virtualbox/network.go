@@ -95,7 +95,7 @@ func createHostonlyAdapter(vbox VBoxManager) (*hostOnlyNetwork, error) {
 		return nil, err
 	}
 
-	res := reHostOnlyAdapterCreated.FindStringSubmatch(string(out))
+	res := reHostOnlyAdapterCreated.FindStringSubmatch(out)
 	if res == nil {
 		return nil, errors.New("Failed to create host-only adapter")
 	}
@@ -367,7 +367,7 @@ func listHostInterfaces(hif HostInterfaces, excludeNets map[string]*hostOnlyNetw
 		// Check if an address of the interface is in the list of excluded addresses
 		ifaceExcluded := false
 		for _, a := range addrs {
-			switch ipnet := a.(type) {
+			switch ipnet := a.(type) { //nolint:gocritic
 			case *net.IPNet:
 				_, excluded := excludeNets[ipnet.String()]
 				if excluded {
@@ -384,7 +384,7 @@ func listHostInterfaces(hif HostInterfaces, excludeNets map[string]*hostOnlyNetw
 
 		// This is a host interface, so add all its addresses to the map
 		for _, a := range addrs {
-			switch ipnet := a.(type) {
+			switch ipnet := a.(type) { //nolint:gocritic
 			case *net.IPNet:
 				m[ipnet.String()] = ipnet
 			}
@@ -395,13 +395,13 @@ func listHostInterfaces(hif HostInterfaces, excludeNets map[string]*hostOnlyNetw
 
 // checkIPNetCollision returns true if any host interfaces conflict with the host-only network mask passed as a parameter.
 // This works with IPv4 or IPv6 ip addresses.
-func checkIPNetCollision(hostonly *net.IPNet, hostIfaces map[string]*net.IPNet) (bool, error) {
+func checkIPNetCollision(hostonly *net.IPNet, hostIfaces map[string]*net.IPNet) bool {
 	for _, ifaceNet := range hostIfaces {
 		if hostonly.IP.Equal(ifaceNet.IP.Mask(ifaceNet.Mask)) {
-			return true, nil
+			return true
 		}
 	}
-	return false, nil
+	return false
 }
 
 // parseIPv4Mask parses IPv4 netmask written in IP form (e.g. 255.255.255.0).

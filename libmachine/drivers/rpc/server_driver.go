@@ -1,4 +1,4 @@
-package rpcdriver
+package rpc
 
 import (
 	"encoding/gob"
@@ -35,7 +35,7 @@ func init() {
 	gob.Register(new(mcnflag.BoolFlag))
 }
 
-type RPCFlags struct {
+type RPCFlags struct { //nolint:revive
 	Values map[string]interface{}
 }
 
@@ -80,7 +80,7 @@ func (r RPCFlags) Bool(key string) bool {
 	return val
 }
 
-type RPCServerDriver struct {
+type RPCServerDriver struct { //nolint:revive
 	ActualDriver drivers.Driver
 	CloseCh      chan bool
 	HeartbeatCh  chan bool

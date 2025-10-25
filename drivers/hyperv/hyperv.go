@@ -328,13 +328,13 @@ func (d *Driver) chooseVirtualSwitch() (string, error) {
 }
 
 // waitForIP waits until the host has a valid IP
-func (d *Driver) waitForIP() (string, error) {
+func (d *Driver) waitForIP() string {
 	log.Infof("Waiting for host to start...")
 
 	for {
 		ip, _ := d.GetIP()
 		if ip != "" {
-			return ip, nil
+			return ip
 		}
 
 		time.Sleep(1 * time.Second)
@@ -365,10 +365,7 @@ func (d *Driver) Start() error {
 		return err
 	}
 
-	ip, err := d.waitForIP()
-	if err != nil {
-		return err
-	}
+	ip := d.waitForIP()
 
 	d.IPAddress = ip
 

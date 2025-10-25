@@ -5,7 +5,7 @@ import "errors"
 
 // FakeSSHCommanderOptions is intended to create a FakeSSHCommander without actually knowing the underlying sshcommands by passing it to NewSSHCommander
 type FakeSSHCommanderOptions struct {
-	//Result of the ssh command to look up the FilesystemType
+	// Result of the ssh command to look up the FilesystemType
 	FilesystemType string
 }
 

@@ -388,7 +388,7 @@ func (d *Driver) CreateVM() error {
 
 	cpus := d.CPU
 	if cpus < 1 {
-		cpus = int(runtime.NumCPU())
+		cpus = runtime.NumCPU()
 	}
 	if cpus > 32 {
 		cpus = 32
@@ -806,7 +806,11 @@ func (d *Driver) parseIPForMACFromIPAddr(ipAddrOutput string, macAddress string)
 		} else if strings.HasPrefix(line, "inet") && !strings.HasPrefix(line, "inet6") && returnNextIP {
 			vals := strings.Split(line, " ")
 			if len(vals) >= 2 {
-				return vals[1][:strings.Index(vals[1], "/")], nil
+				idx := strings.Index(vals[1], "/")
+				if idx != -1 {
+					return vals[1][:idx], nil
+				}
+				return vals[1], nil
 			}
 		}
 	}
@@ -962,7 +966,7 @@ func parseAndValidateCIDR(hostOnlyCIDR string) (net.IP, *net.IPNet, error) {
 // will be used for machine vm instances.
 func validateNoIPCollisions(hif HostInterfaces, hostOnlyNet *net.IPNet, currHostOnlyNets map[string]*hostOnlyNetwork) error {
 	hostOnlyByCIDR := map[string]*hostOnlyNetwork{}
-	//listHostOnlyAdapters returns a map w/ virtualbox net names as key.  Rekey to CIDRs
+	// listHostOnlyAdapters returns a map w/ virtualbox net names as key.  Rekey to CIDRs
 	for _, n := range currHostOnlyNets {
 		ipnet := net.IPNet{IP: n.IPv4.IP, Mask: n.IPv4.Mask}
 		hostOnlyByCIDR[ipnet.String()] = n
@@ -973,10 +977,7 @@ func validateNoIPCollisions(hif HostInterfaces, hostOnlyNet *net.IPNet, currHost
 		return err
 	}
 
-	collision, err := checkIPNetCollision(hostOnlyNet, m)
-	if err != nil {
-		return err
-	}
+	collision := checkIPNetCollision(hostOnlyNet, m)
 
 	if collision {
 		return ErrNetworkAddrCollision
