@@ -142,7 +142,11 @@ func (xcg *X509CertGenerator) GenerateCACertificate(certFile, keyFile, org strin
 	if err != nil {
 		return err
 	}
-	certOut.Close()
+	err = certOut.Close()
+	if err != nil {
+		return err
+
+	}
 
 	keyOut, err := os.OpenFile(keyFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
@@ -154,7 +158,11 @@ func (xcg *X509CertGenerator) GenerateCACertificate(certFile, keyFile, org strin
 	if err != nil {
 		return err
 	}
-	keyOut.Close()
+	err = keyOut.Close()
+	if err != nil {
+		return err
+
+	}
 
 	return nil
 }
@@ -218,7 +226,10 @@ func (xcg *X509CertGenerator) GenerateCert(opts *Options) error {
 	if err != nil {
 		return err
 	}
-	certOut.Close()
+	err = certOut.Close()
+	if err != nil {
+		return err
+	}
 
 	keyOut, err := os.OpenFile(opts.KeyFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
@@ -229,7 +240,10 @@ func (xcg *X509CertGenerator) GenerateCert(opts *Options) error {
 	if err != nil {
 		return err
 	}
-	keyOut.Close()
+	err = keyOut.Close()
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

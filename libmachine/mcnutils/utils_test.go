@@ -24,7 +24,7 @@ func TestCopyFile(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	srcFile.Close()
+	_ = srcFile.Close()
 
 	srcFilePath := filepath.Join(os.TempDir(), srcFi.Name())
 
@@ -38,7 +38,7 @@ func TestCopyFile(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	destFile.Close()
+	_ = destFile.Close()
 
 	destFilePath := filepath.Join(os.TempDir(), destFi.Name())
 

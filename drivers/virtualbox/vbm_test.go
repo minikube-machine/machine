@@ -55,8 +55,12 @@ func TestVbmOutErr(t *testing.T) {
 	vBoxManager := NewVBoxManager()
 	vBoxManager.runCmd = func(cmd *exec.Cmd) error {
 		cmdRun = cmd
-		fmt.Fprint(cmd.Stdout, "Printed to StdOut")
-		fmt.Fprint(cmd.Stderr, "Printed to StdErr")
+		if _, err := fmt.Fprint(cmd.Stdout, "Printed to StdOut"); err != nil {
+			return err
+		}
+		if _, err := fmt.Fprint(cmd.Stderr, "Printed to StdErr"); err != nil {
+			return err
+		}
 		return nil
 	}
 
@@ -89,7 +93,9 @@ func TestVbmOutErrNotFound(t *testing.T) {
 func TestVbmOutErrFailingWithExitStatus(t *testing.T) {
 	vBoxManager := NewVBoxManager()
 	vBoxManager.runCmd = func(cmd *exec.Cmd) error {
-		fmt.Fprint(cmd.Stderr, "error: Unable to run vbox")
+		if _, err := fmt.Fprint(cmd.Stderr, "error: Unable to run vbox"); err != nil {
+			return err
+		}
 		return errors.New("exit status BUG")
 	}
 
@@ -107,11 +113,14 @@ func TestVbmOutErrRetryOnce(t *testing.T) {
 
 		runCount++
 		if runCount == 1 {
-			fmt.Fprint(cmd.Stderr, "error: The object is not ready")
+			_, err := fmt.Fprint(cmd.Stderr, "error: The object is not ready")
+			assert.NoError(t, err)
 			return errors.New("Fail the first time it's called")
 		}
 
-		fmt.Fprint(cmd.Stdout, "Printed to StdOut")
+		if _, err := fmt.Fprint(cmd.Stdout, "Printed to StdOut"); err != nil {
+			return err
+		}
 		return nil
 	}
 
@@ -129,7 +138,8 @@ func TestVbmOutErrRetryMax(t *testing.T) {
 	vBoxManager := NewVBoxManager()
 	vBoxManager.runCmd = func(cmd *exec.Cmd) error {
 		runCount++
-		fmt.Fprint(cmd.Stderr, "error: The object is not ready")
+		_, err := fmt.Fprint(cmd.Stderr, "error: The object is not ready")
+		assert.NoError(t, err)
 		return errors.New("Always fail")
 	}
 

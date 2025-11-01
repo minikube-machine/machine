@@ -38,45 +38,45 @@ func (ml *FmtMachineLogger) SetErrWriter(err io.Writer) {
 func (ml *FmtMachineLogger) Debug(args ...interface{}) {
 	ml.history.Record(args...)
 	if ml.debug {
-		fmt.Fprintln(ml.errWriter, args...)
+		_, _ = fmt.Fprintln(ml.errWriter, args...)
 	}
 }
 
 func (ml *FmtMachineLogger) Debugf(fmtString string, args ...interface{}) {
 	ml.history.Recordf(fmtString, args...)
 	if ml.debug {
-		fmt.Fprintf(ml.errWriter, fmtString+"\n", args...)
+		_, _ = fmt.Fprintf(ml.errWriter, fmtString+"\n", args...)
 	}
 }
 
 func (ml *FmtMachineLogger) Error(args ...interface{}) {
 	ml.history.Record(args...)
-	fmt.Fprintln(ml.errWriter, args...)
+	_, _ = fmt.Fprintln(ml.errWriter, args...)
 }
 
 func (ml *FmtMachineLogger) Errorf(fmtString string, args ...interface{}) {
 	ml.history.Recordf(fmtString, args...)
-	fmt.Fprintf(ml.errWriter, fmtString+"\n", args...)
+	_, _ = fmt.Fprintf(ml.errWriter, fmtString+"\n", args...)
 }
 
 func (ml *FmtMachineLogger) Info(args ...interface{}) {
 	ml.history.Record(args...)
-	fmt.Fprintln(ml.outWriter, args...)
+	_, _ = fmt.Fprintln(ml.outWriter, args...)
 }
 
 func (ml *FmtMachineLogger) Infof(fmtString string, args ...interface{}) {
 	ml.history.Recordf(fmtString, args...)
-	fmt.Fprintf(ml.outWriter, fmtString+"\n", args...)
+	_, _ = fmt.Fprintf(ml.outWriter, fmtString+"\n", args...)
 }
 
 func (ml *FmtMachineLogger) Warn(args ...interface{}) {
 	ml.history.Record(args...)
-	fmt.Fprintln(ml.outWriter, args...)
+	_, _ = fmt.Fprintln(ml.outWriter, args...)
 }
 
 func (ml *FmtMachineLogger) Warnf(fmtString string, args ...interface{}) {
 	ml.history.Recordf(fmtString, args...)
-	fmt.Fprintf(ml.outWriter, fmtString+"\n", args...)
+	_, _ = fmt.Fprintf(ml.outWriter, fmtString+"\n", args...)
 }
 
 func (ml *FmtMachineLogger) History() []string {

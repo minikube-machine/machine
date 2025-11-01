@@ -217,7 +217,7 @@ This could be due to a VPN, proxy, or host file configuration issue.
 
 You also might want to clear any VirtualBox host only interfaces you are not using.`, engine.DefaultPort)
 	} else {
-		conn.Close()
+		_ = conn.Close()
 	}
 }
 

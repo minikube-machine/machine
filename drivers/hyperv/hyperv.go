@@ -494,7 +494,10 @@ func (d *Driver) generateDiskImage() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	file.Close()
+	err = file.Close()
+	if err != nil {
+		return "", err
+	}
 
 	if err := cmd("Hyper-V\\Convert-VHD", "-Path", quote(fixed), "-DestinationPath", quote(diskImage), "-VHDType", "Dynamic", "-DeleteSource"); err != nil {
 		return "", err

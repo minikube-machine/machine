@@ -9,7 +9,7 @@ import (
 
 func TestDetectBash(t *testing.T) {
 	defer func(shell string) { os.Setenv("SHELL", shell) }(os.Getenv("SHELL"))
-	os.Setenv("SHELL", "/bin/bash")
+	assert.NoError(t, os.Setenv("SHELL", "/bin/bash"))
 
 	shell, err := Detect()
 
@@ -19,7 +19,7 @@ func TestDetectBash(t *testing.T) {
 
 func TestDetectFish(t *testing.T) {
 	defer func(shell string) { os.Setenv("SHELL", shell) }(os.Getenv("SHELL"))
-	os.Setenv("SHELL", "/bin/fish")
+	assert.NoError(t, os.Setenv("SHELL", "/bin/fish"))
 
 	shell, err := Detect()
 

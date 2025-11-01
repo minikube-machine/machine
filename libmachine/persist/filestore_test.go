@@ -16,7 +16,7 @@ import (
 )
 
 func cleanup() {
-	os.RemoveAll(os.Getenv("MACHINE_STORAGE_PATH"))
+	_ = os.RemoveAll(os.Getenv("MACHINE_STORAGE_PATH"))
 }
 
 func getTestStore() Filestore {

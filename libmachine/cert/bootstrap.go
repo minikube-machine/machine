@@ -107,7 +107,7 @@ func BootstrapCertificates(authOptions *auth.Options) error {
 		}
 		if !current {
 			log.Info("CA certificate is outdated and needs to be regenerated")
-			os.Remove(caPrivateKeyPath)
+			_ = os.Remove(caPrivateKeyPath)
 			if err := createCACert(authOptions, caOrg, bits); err != nil {
 				return err
 			}
@@ -125,7 +125,7 @@ func BootstrapCertificates(authOptions *auth.Options) error {
 		}
 		if !current {
 			log.Info("Client certificate is outdated and needs to be regenerated")
-			os.Remove(clientKeyPath)
+			_ = os.Remove(clientKeyPath)
 			if err := createCert(authOptions, org, bits); err != nil {
 				return err
 			}

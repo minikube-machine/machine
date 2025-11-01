@@ -376,15 +376,15 @@ type ReaderWithProgress struct {
 func (r *ReaderWithProgress) Read(p []byte) (int, error) {
 	n, err := r.ReadCloser.Read(p)
 
-	if n > 0 {
+	if n > 0 && err == nil {
 		r.bytesTransferred += int64(n)
 		percentage := r.bytesTransferred * 100 / r.expectedLength
 
 		for percentage >= r.nextPercentToPrint {
 			if r.nextPercentToPrint%10 == 0 {
-				fmt.Fprintf(r.out, "%d%%", r.nextPercentToPrint)
+				_, err = fmt.Fprintf(r.out, "%d%%", r.nextPercentToPrint)
 			} else if r.nextPercentToPrint%2 == 0 {
-				fmt.Fprint(r.out, ".")
+				_, err = fmt.Fprint(r.out, ".")
 			}
 			r.nextPercentToPrint += 2
 		}
@@ -394,7 +394,10 @@ func (r *ReaderWithProgress) Read(p []byte) (int, error) {
 }
 
 func (r *ReaderWithProgress) Close() error {
-	fmt.Fprintln(r.out)
+	_, err := fmt.Fprintln(r.out)
+	if err != nil {
+		return err
+	}
 	return r.ReadCloser.Close()
 }
 

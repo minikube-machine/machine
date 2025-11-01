@@ -72,7 +72,7 @@ func TestLocalBinaryPluginAddressTimeout(t *testing.T) {
 func TestLocalBinaryPluginClose(t *testing.T) {
 	lbp := &Plugin{}
 	lbp.stopCh = make(chan struct{})
-	go lbp.Close()
+	go func() { _ = lbp.Close() }()
 	_, isOpen := <-lbp.stopCh
 	if isOpen {
 		t.Fatal("Close did not send a stop message on the proper channel")
@@ -151,7 +151,7 @@ func TestExecServer(t *testing.T) {
 		t.Fatalf("Error written to log was not what we expected\nexpected: %s\nactual:   %s", expectedErr, logErrScanner.Text())
 	}
 
-	lbp.Close()
+	_ = lbp.Close()
 
 	if err := <-finalErr; err != nil {
 		t.Fatalf("Error serving: %s", err)

@@ -152,8 +152,12 @@ func (lbe *Executor) Start() (*bufio.Scanner, *bufio.Scanner, error) {
 	outScanner := bufio.NewScanner(lbe.pluginStdout)
 	errScanner := bufio.NewScanner(lbe.pluginStderr)
 
-	os.Setenv(PluginEnvKey, PluginEnvVal)
-	os.Setenv(PluginEnvDriverName, lbe.DriverName)
+	if err := os.Setenv(PluginEnvKey, PluginEnvVal); err != nil {
+		return nil, nil, fmt.Errorf("Error setting env variable: %s", err)
+	}
+	if err := os.Setenv(PluginEnvDriverName, lbe.DriverName); err != nil {
+		return nil, nil, fmt.Errorf("Error setting env variable: %s", err)
+	}
 
 	if err := lbe.cmd.Start(); err != nil {
 		return nil, nil, fmt.Errorf("Error starting plugin binary: %s", err)
