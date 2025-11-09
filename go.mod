@@ -3,11 +3,7 @@ module github.com/docker/machine
 go 1.17
 
 require (
-	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/aregm/cpuid v0.0.0-20181003105527-1a4a6f06a1c6
-	github.com/docker/docker v0.0.0-20180621001606-093424bec097 // indirect
-	github.com/docker/go-units v0.0.0-20151230175859-0bbddae09c5a // indirect
-	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/hectane/go-acl v0.0.0-20190604041725-da78bae5fc95
 	github.com/moby/term v0.0.0-20200416134343-063f2cd0b49d
 	github.com/sayboras/dockerclient v1.0.0
@@ -18,7 +14,11 @@ require (
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20170929234023-d6e3b3328b78 // indirect
+	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/docker/docker v0.0.0-20180621001606-093424bec097 // indirect
+	github.com/docker/go-units v0.0.0-20151230175859-0bbddae09c5a // indirect
+	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/konsorten/go-windows-terminal-sequences v1.0.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/sirupsen/logrus v1.4.2 // indirect
