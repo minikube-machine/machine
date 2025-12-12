@@ -15,7 +15,7 @@ import (
 	"github.com/docker/machine/libmachine/mcnutils"
 	"github.com/moby/term"
 	"golang.org/x/crypto/ssh"
-	"golang.org/x/crypto/ssh/terminal"
+	terminal "golang.org/x/term"
 )
 
 type Client interface {
