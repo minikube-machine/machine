@@ -7,7 +7,7 @@ require (
 	github.com/hectane/go-acl v0.0.0-20190604041725-da78bae5fc95
 	github.com/moby/term v0.0.0-20200416134343-063f2cd0b49d
 	github.com/sayboras/dockerclient v1.0.0
-	github.com/stretchr/testify v1.2.2
+	github.com/stretchr/testify v1.7.0
 	golang.org/x/crypto v0.26.0
 	golang.org/x/sys v0.24.0
 	golang.org/x/term v0.23.0
@@ -23,4 +23,5 @@ require (
 	github.com/konsorten/go-windows-terminal-sequences v1.0.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/sirupsen/logrus v1.4.2 // indirect
+	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
 )
