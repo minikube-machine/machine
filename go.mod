@@ -25,3 +25,9 @@ require (
 	github.com/sirupsen/logrus v1.4.2 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c // indirect
 )
+
+replace (
+	github.com/Nvveen/Gotty => github.com/ijc25/Gotty v0.0.0-20170406111628-a8b993ba6abd
+	github.com/docker/docker => github.com/docker/docker v17.12.0-ce-rc1.0.20180718150940-a3ef7e9a9bda+incompatible
+	github.com/docker/go-units => github.com/docker/go-units v0.3.2-0.20170127094116-9e638d38cf69
+)
