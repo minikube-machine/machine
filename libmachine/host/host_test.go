@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/docker/machine/libmachine/drivers/fakedriver"
-	_ "github.com/docker/machine/drivers/none"
+	_ "github.com/docker/machine/libmachine/drivers/nodriver"
 	"github.com/docker/machine/libmachine/provision"
 	"github.com/docker/machine/libmachine/state"
 )

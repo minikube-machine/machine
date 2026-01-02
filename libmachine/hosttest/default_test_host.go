@@ -1,8 +1,8 @@
 package hosttest
 
 import (
-	"github.com/docker/machine/drivers/none"
 	"github.com/docker/machine/libmachine/auth"
+	"github.com/docker/machine/libmachine/drivers/nodriver"
 	"github.com/docker/machine/libmachine/engine"
 	"github.com/docker/machine/libmachine/host"
 	"github.com/docker/machine/libmachine/swarm"
@@ -59,7 +59,7 @@ func GetDefaultTestHost() (*host.Host, error) {
 		},
 	}
 
-	driver := none.NewDriver(DefaultHostName, "/tmp/artifacts")
+	driver := nodriver.NewDriver(DefaultHostName, "/tmp/artifacts")
 
 	host := &host.Host{
 		ConfigVersion: version.ConfigVersion,

@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/docker/machine/commands/mcndirs"
-	"github.com/docker/machine/drivers/none"
+	"github.com/docker/machine/libmachine/drivers/nodriver"
 	"github.com/docker/machine/libmachine/host"
 	"github.com/docker/machine/libmachine/hosttest"
 )
@@ -233,7 +233,7 @@ func TestStoreLoad(t *testing.T) {
 		t.Fatal("Expected driver loaded from store to be of type *host.RawDataDriver and it was not")
 	}
 
-	realDriver := none.NewDriver(h.Name, store.Path)
+	realDriver := nodriver.NewDriver(h.Name, store.Path)
 
 	if err := json.Unmarshal(rawDataDriver.Data, &realDriver); err != nil {
 		t.Fatalf("Error unmarshaling rawDataDriver data into concrete 'none' driver: %s", err)
