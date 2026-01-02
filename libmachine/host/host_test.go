@@ -3,7 +3,7 @@ package host
 import (
 	"testing"
 
-	"github.com/docker/machine/drivers/fakedriver"
+	"github.com/docker/machine/libmachine/drivers/fakedriver"
 	_ "github.com/docker/machine/drivers/none"
 	"github.com/docker/machine/libmachine/provision"
 	"github.com/docker/machine/libmachine/state"

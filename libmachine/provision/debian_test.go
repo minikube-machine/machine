@@ -3,8 +3,8 @@ package provision
 import (
 	"testing"
 
-	"github.com/docker/machine/drivers/fakedriver"
 	"github.com/docker/machine/libmachine/auth"
+	"github.com/docker/machine/libmachine/drivers/fakedriver"
 	"github.com/docker/machine/libmachine/engine"
 	"github.com/docker/machine/libmachine/provision/provisiontest"
 	"github.com/docker/machine/libmachine/swarm"

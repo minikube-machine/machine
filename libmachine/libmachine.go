@@ -22,11 +22,11 @@ import (
 
 	"io"
 
-	"github.com/docker/machine/drivers/errdriver"
 	"github.com/docker/machine/libmachine/auth"
 	"github.com/docker/machine/libmachine/cert"
 	"github.com/docker/machine/libmachine/check"
 	"github.com/docker/machine/libmachine/drivers"
+	"github.com/docker/machine/libmachine/drivers/errdriver"
 	"github.com/docker/machine/libmachine/drivers/plugin/localbinary"
 	"github.com/docker/machine/libmachine/drivers/rpc"
 	"github.com/docker/machine/libmachine/engine"
