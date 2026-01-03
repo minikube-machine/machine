@@ -2,7 +2,6 @@ package provision
 
 import (
 	"fmt"
-	"strconv"
 
 	"github.com/docker/machine/libmachine/auth"
 	"github.com/docker/machine/libmachine/drivers"
@@ -15,41 +14,26 @@ import (
 )
 
 func init() {
-	Register("Ubuntu-SystemD", &RegisteredProvisioner{
-		New: NewUbuntuSystemdProvisioner,
+	Register("Ubuntu", &RegisteredProvisioner{
+		New: NewUbuntuProvisioner,
 	})
 }
 
-func NewUbuntuSystemdProvisioner(d drivers.Driver) Provisioner {
-	return &UbuntuSystemdProvisioner{
+func NewUbuntuProvisioner(d drivers.Driver) Provisioner {
+	return &UbuntuProvisioner{
 		NewSystemdProvisioner("ubuntu", d),
 	}
 }
 
-type UbuntuSystemdProvisioner struct {
+type UbuntuProvisioner struct {
 	SystemdProvisioner
 }
 
-func (provisioner *UbuntuSystemdProvisioner) String() string {
-	return "ubuntu(systemd)"
+func (provisioner *UbuntuProvisioner) String() string {
+	return "ubuntu"
 }
 
-func (provisioner *UbuntuSystemdProvisioner) CompatibleWithHost() bool {
-	const FirstUbuntuSystemdVersion = 15.04
-
-	isUbuntu := provisioner.OsReleaseInfo.ID == provisioner.OsReleaseID
-	if !isUbuntu {
-		return false
-	}
-	versionNumber, err := strconv.ParseFloat(provisioner.OsReleaseInfo.VersionID, 64)
-	if err != nil {
-		return false
-	}
-	return versionNumber >= FirstUbuntuSystemdVersion
-
-}
-
-func (provisioner *UbuntuSystemdProvisioner) Package(name string, action pkgaction.PackageAction) error {
+func (provisioner *UbuntuProvisioner) Package(name string, action pkgaction.PackageAction) error {
 	var packageAction string
 
 	updateMetadata := true
@@ -82,7 +66,7 @@ func (provisioner *UbuntuSystemdProvisioner) Package(name string, action pkgacti
 	return waitForLock(provisioner, command)
 }
 
-func (provisioner *UbuntuSystemdProvisioner) dockerDaemonResponding() bool {
+func (provisioner *UbuntuProvisioner) dockerDaemonResponding() bool {
 	log.Debug("checking docker daemon")
 
 	if out, err := provisioner.SSHCommand("sudo docker version"); err != nil {
@@ -95,7 +79,7 @@ func (provisioner *UbuntuSystemdProvisioner) dockerDaemonResponding() bool {
 	return true
 }
 
-func (provisioner *UbuntuSystemdProvisioner) Provision(swarmOptions swarm.Options, authOptions auth.Options, engineOptions engine.Options) error {
+func (provisioner *UbuntuProvisioner) Provision(swarmOptions swarm.Options, authOptions auth.Options, engineOptions engine.Options) error {
 	provisioner.SwarmOptions = swarmOptions
 	provisioner.AuthOptions = authOptions
 	provisioner.EngineOptions = engineOptions

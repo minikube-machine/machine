@@ -166,8 +166,8 @@ func TestMachineCustomPortBoot2Docker(t *testing.T) {
 	}
 }
 
-func TestUbuntuSystemdDaemonBinary(t *testing.T) {
-	p := NewUbuntuSystemdProvisioner(&fakedriver.Driver{}).(*UbuntuSystemdProvisioner)
+func TestUbuntuDaemonBinary(t *testing.T) {
+	p := NewUbuntuProvisioner(&fakedriver.Driver{}).(*UbuntuProvisioner)
 	cases := []struct {
 		output, want string
 	}{
