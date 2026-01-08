@@ -5,7 +5,7 @@ go 1.25
 require (
 	github.com/aregm/cpuid v0.0.0-20181003105527-1a4a6f06a1c6
 	github.com/hectane/go-acl v0.0.0-20190604041725-da78bae5fc95
-	github.com/moby/term v0.5.0
+	github.com/moby/term v0.5.2
 	github.com/sayboras/dockerclient v1.0.0
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/crypto v0.46.0
@@ -14,7 +14,7 @@ require (
 )
 
 require (
-	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
+	github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c // indirect
 	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docker/docker v0.0.0-20180621001606-093424bec097 // indirect
