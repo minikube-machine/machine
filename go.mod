@@ -15,19 +15,14 @@ require (
 
 require (
 	github.com/Azure/go-ansiterm v0.0.0-20250102033503-faa5f7b0171c // indirect
-	github.com/Nvveen/Gotty v0.0.0-20120604004816-cd527374f1e5 // indirect
+	github.com/containerd/log v0.1.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/docker/docker v0.0.0-20180621001606-093424bec097 // indirect
-	github.com/docker/go-units v0.0.0-20151230175859-0bbddae09c5a // indirect
+	github.com/docker/docker v28.5.2+incompatible // indirect
+	github.com/docker/go-units v0.5.0 // indirect
 	github.com/gorilla/mux v1.8.0 // indirect
+	github.com/moby/sys/atomicwriter v0.1.0 // indirect
+	github.com/morikuni/aec v1.1.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/sirupsen/logrus v1.4.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-)
-
-replace (
-	github.com/Nvveen/Gotty => github.com/ijc25/Gotty v0.0.0-20170406111628-a8b993ba6abd
-	github.com/docker/docker => github.com/docker/docker v17.12.0-ce-rc1.0.20180718150940-a3ef7e9a9bda+incompatible
-	github.com/docker/go-units => github.com/docker/go-units v0.3.2-0.20170127094116-9e638d38cf69
 )
