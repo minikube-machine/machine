@@ -1,6 +1,6 @@
 module github.com/docker/machine
 
-go 1.21
+go 1.25
 
 require (
 	github.com/aregm/cpuid v0.0.0-20181003105527-1a4a6f06a1c6
@@ -8,9 +8,9 @@ require (
 	github.com/moby/term v0.5.0
 	github.com/sayboras/dockerclient v1.0.0
 	github.com/stretchr/testify v1.7.0
-	golang.org/x/crypto v0.26.0
-	golang.org/x/sys v0.24.0
-	golang.org/x/term v0.23.0
+	golang.org/x/crypto v0.46.0
+	golang.org/x/sys v0.39.0
+	golang.org/x/term v0.38.0
 )
 
 require (

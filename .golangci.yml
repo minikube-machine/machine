@@ -1,12 +1,32 @@
 ---
+version: "2"
 linters:
+  enable:
+    - govet
+    - gocyclo
+  settings:
+    staticcheck:
+      # SAxxxx checks in https://staticcheck.dev/docs/configuration/options/#checks
+      # Default: ["all", "-ST1000", "-ST1003", "-ST1016", "-ST1020", "-ST1021", "-ST1022"]
+      checks:
+        - "all"
+        - "-ST1000"
+        - "-ST1003"
+        - "-ST1016"
+        - "-ST1020"
+        - "-ST1021"
+        - "-ST1022"
+        # Incorrectly formatted error string
+        # https://staticcheck.dev/docs/checks/#ST1005
+        - "-ST1005"
+        # Using a deprecated function, variable, constant or field.
+        # https://staticcheck.dev/docs/checks/#SA1019
+        - "-SA1019"
+  exclusions:
+    rules:
+      - source: "^\\s*defer\\s+"
+        linters: ["errcheck"]
+formatters:
   enable:
     - gofmt
     - goimports
-    - govet
-    - gocyclo
-linters-settings:
-  staticcheck:
-    checks:
-      - all
-      - '-SA1019'  # disable the rule SA1019
